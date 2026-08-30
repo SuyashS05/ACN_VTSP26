@@ -201,3 +201,4 @@ graph LR
 - [Gap Analysis, Product Design & Business Case](product_business_analysis.md)
 - [Blind Crossing (interactive simulation)](blind_crossing.html) — open in a browser: a 3D demo of the BSM broadcast/receive/predict/warn pipeline described above
 - [Chain Brake (interactive simulation)](blind_braking.html) — open in a browser: a 3D demo of the same pipeline applied to a highway chain-reaction braking scenario
+- [Signal Path (interactive simulation)](signal_path.html) — open in a browser: an animated version of the OBU block diagram above, tracing one message through every component between two vehicles

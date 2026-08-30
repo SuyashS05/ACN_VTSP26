@@ -187,3 +187,4 @@ MoRTH's near-term focus is V2V; **V2I is reportedly planned as a later phase**, 
 - [Gap Analysis, Product Design & Business Case](product_business_analysis.md) — specific product concepts, BOM/cost analysis, TAM/SAM/SOM, GTM plan
 - [Blind Crossing (interactive simulation)](blind_crossing.html) — open in a browser: a 3D demo of the blind-intersection scenario with V2V toggled on/off
 - [Chain Brake (interactive simulation)](blind_braking.html) — open in a browser: a 3D demo of the "sudden braking ahead" highway pile-up scenario with V2V toggled on/off
+- [Signal Path (interactive simulation)](signal_path.html) — open in a browser: a component-level trace of one Basic Safety Message through every chip and stage, in both directions between two vehicles

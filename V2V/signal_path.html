@@ -1,0 +1,649 @@
+<title>Signal Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0b1220;
+    --bg-deep:#080d17;
+    --panel:#111b2e;
+    --panel-raised:#152238;
+    --hair:rgba(180,200,230,0.10);
+    --hair-strong:rgba(180,200,230,0.18);
+    --ink:#e9edf5;
+    --ink-dim:#8b93a8;
+    --ink-faint:#5b6478;
+    --signal:#3fd8cb;
+    --safe:#57e08a;
+    --hazard:#ffb340;
+    --critical:#ff5c5c;
+    --font-display:'Rajdhani',system-ui,'Segoe UI',sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);}
+
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+    font-family:var(--font-body);
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--signal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    opacity:0;
+    animation:rise 0.6s ease-out 0.05s forwards;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--signal);
+    box-shadow:0 0 8px 1px var(--signal);
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(40px,6vw,64px);
+    line-height:0.98;
+    letter-spacing:0.01em;
+    margin:0 0 16px;
+    text-wrap:balance;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.12s forwards;
+  }
+  .sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink-dim);
+    max-width:680px;
+    margin:0 0 40px;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.2s forwards;
+  }
+  .sub strong{color:var(--ink);font-weight:600;}
+
+  @keyframes rise{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .eyebrow,h1,.sub{animation:none;opacity:1;}
+  }
+
+  .console{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:16px;
+    margin-bottom:16px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .console{grid-template-columns:1fr;}
+  }
+
+  .scene-panel{
+    position:relative;
+    background:var(--bg-deep);
+    border:1px solid var(--hair-strong);
+    overflow:hidden;
+  }
+  .scene-panel figure{margin:0;}
+  .scene-panel svg{display:block;width:100%;height:auto;color:var(--ink);}
+
+  .corner{position:absolute;width:22px;height:22px;pointer-events:none;opacity:0.8;}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--signal);}
+  .corner.tl{top:10px;left:10px;}
+  .corner.tr{top:10px;right:10px;}
+  .corner.bl{bottom:10px;left:10px;}
+  .corner.br{bottom:10px;right:10px;}
+  .corner::before{width:100%;height:2px;top:0;left:0;}
+  .corner::after{width:2px;height:100%;top:0;left:0;}
+  .corner.tr::before{left:auto;right:0;}
+  .corner.tr::after{left:auto;right:0;}
+  .corner.bl::before{top:auto;bottom:0;}
+  .corner.bl::after{top:auto;bottom:0;}
+  .corner.br::before{top:auto;bottom:0;left:auto;right:0;}
+  .corner.br::after{top:auto;bottom:0;left:auto;right:0;}
+
+  .clock{
+    position:absolute;top:12px;left:16px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-dim);
+    letter-spacing:0.06em;
+    z-index:3;
+  }
+  .clock b{color:var(--signal);font-weight:500;}
+
+  .mode-pill{
+    position:absolute;top:12px;right:16px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    padding:4px 10px;
+    border:1px solid var(--hair-strong);
+    background:rgba(8,13,23,0.7);
+    color:var(--ink-faint);
+    z-index:3;
+    transition:color 0.3s,border-color 0.3s;
+  }
+  .mode-pill.tx{color:var(--signal);border-color:rgba(63,216,203,0.4);}
+  .mode-pill.done{color:var(--safe);border-color:rgba(87,224,138,0.4);}
+
+  .hud-banner{
+    position:absolute;
+    left:50%;top:10px;
+    transform:translate(-50%,-8px);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:7px 16px;
+    border:1px solid var(--safe);
+    color:var(--safe);
+    background:rgba(8,13,23,0.9);
+    opacity:0;
+    transition:opacity 0.25s ease,transform 0.25s ease;
+    z-index:4;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .hud-banner.show{opacity:1;transform:translate(-50%,0);}
+
+  figcaption{
+    padding:8px 16px 12px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    border-top:1px solid var(--hair);
+  }
+
+  .telemetry{
+    display:flex;
+    flex-direction:column;
+    background:var(--panel);
+    border:1px solid var(--hair);
+  }
+  .telemetry-head{
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--hair);
+  }
+  .telemetry-head h2{
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 10px;
+  }
+  .specs{display:flex;flex-wrap:wrap;gap:6px;}
+  .spec-chip{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-dim);
+    border:1px solid var(--hair-strong);
+    padding:3px 7px;
+    line-height:1.4;
+  }
+  .spec-chip b{color:var(--ink);font-weight:500;}
+
+  .legend{display:flex;gap:14px;padding:10px 16px;border-bottom:1px solid var(--hair);font-family:var(--font-mono);font-size:11px;color:var(--ink-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .log{
+    flex:1;
+    padding:12px 14px;
+    overflow-y:auto;
+    min-height:260px;
+    max-height:380px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    line-height:1.65;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .log::-webkit-scrollbar{width:6px;}
+  .log::-webkit-scrollbar-thumb{background:var(--hair-strong);}
+  .log .empty{color:var(--ink-faint);font-style:normal;}
+  .log-line{display:flex;gap:7px;opacity:0;animation:logIn 0.3s ease forwards;}
+  @keyframes logIn{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:translateX(0);}}
+  .log-line .ts{color:var(--ink-faint);flex:none;}
+  .log-line .tag{flex:none;font-weight:500;white-space:nowrap;}
+  .log-line .msg{color:var(--ink-dim);min-width:0;}
+  .log-line.c-ab .tag{color:var(--signal);}
+  .log-line.c-ba .tag{color:var(--safe);}
+  .log-line.c-done .tag,.log-line.c-done .msg{color:var(--ink);}
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    border-top:1px solid var(--hair);
+  }
+  .run-btn{
+    margin-left:auto;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--signal);
+    color:#04211d;
+    border:1px solid var(--signal);
+    padding:9px 18px;
+    cursor:pointer;
+    transition:background 0.15s,transform 0.1s,opacity 0.15s;
+  }
+  .run-btn:hover{background:#59e3d7;}
+  .run-btn:active{transform:translateY(1px);}
+  .run-btn:disabled{opacity:0.5;cursor:default;}
+  .run-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .hint{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);}
+
+  .pipeline{margin-top:56px;}
+  .section-label{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+  .pipeline h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 28px;
+  }
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--hair);
+    border:1px solid var(--hair);
+  }
+  @media (max-width:760px){.steps{grid-template-columns:1fr 1fr;}}
+  .step{background:var(--panel);padding:22px 20px 24px;display:flex;flex-direction:column;gap:12px;}
+  .step-num{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:0.08em;}
+  .step svg{color:var(--signal);width:26px;height:26px;}
+  .step h3{font-family:var(--font-display);font-weight:600;font-size:17px;margin:0;letter-spacing:0.01em;}
+  .step p{font-size:13.5px;line-height:1.55;color:var(--ink-dim);margin:0;}
+
+  .note{
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--hair);
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-faint);
+    max-width:760px;
+  }
+</style>
+
+<div class="page">
+  <div class="eyebrow"><span class="dot"></span>AIS-230 &middot; C-V2X SIDELINK &middot; COMPONENT-LEVEL TRACE</div>
+  <h1>Signal Path</h1>
+  <p class="sub">A Basic Safety Message crosses ten components before a driver ever sees a warning &mdash; sensor, chip, cryptographic signature, radio, and back again. <strong>Press Play to trace one broadcast cycle, in both directions, component by component.</strong></p>
+
+  <div class="console">
+    <div class="scene-panel" id="scenePanel">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="clock">T+ <b id="clockVal">0.00</b>s</div>
+      <div class="mode-pill" id="modePill">STANDBY</div>
+      <div class="hud-banner" id="hudBanner">Both Messages Delivered</div>
+
+      <figure>
+        <svg viewBox="-35 0 1150 420" role="img" aria-label="Component-level path of a Basic Safety Message travelling from Vehicle A to Vehicle B and back: GNSS to baseband to HSM to radio across the 5.9GHz sidelink, then radio to HSM to the safety application stack to the CAN bus to the instrument cluster.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+
+            <filter id="glow" x="-120%" y="-120%" width="340%" height="340%">
+              <feGaussianBlur stdDeviation="3.2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <symbol id="icon-gnss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s6-5.2 6-10.2A6 6 0 0012 4a6 6 0 00-6 6.8C6 15.8 12 21 12 21z"/>
+              <circle cx="12" cy="10.4" r="2"/>
+            </symbol>
+            <symbol id="icon-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <rect x="7" y="7" width="10" height="10" rx="1"/>
+              <path d="M9 2.5v4M15 2.5v4M9 17.5v4M15 17.5v4M2.5 9h4M2.5 15h4M17.5 9h4M17.5 15h4"/>
+            </symbol>
+            <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="11" width="12" height="9" rx="1.5"/>
+              <path d="M8.5 11V8a3.5 3.5 0 017 0v3"/>
+            </symbol>
+            <symbol id="icon-rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+              <path d="M8.5 13a5 5 0 017 0M5.5 10a9.5 9.5 0 0113 0"/>
+            </symbol>
+            <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+              <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/>
+            </symbol>
+            <symbol id="icon-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+              <circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+            </symbol>
+            <symbol id="icon-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 17c2-1 3-3 3-5V8a2 2 0 012-2h6a2 2 0 012 2v4c0 2 1 4 3 5"/>
+              <path d="M9 19a3 3 0 006 0"/>
+            </symbol>
+          </defs>
+
+          <!-- column backgrounds -->
+          <rect x="-23" y="70" width="439" height="322" fill="var(--panel)" stroke="var(--hair-strong)"/>
+          <rect x="664" y="70" width="439" height="322" fill="var(--panel)" stroke="var(--hair-strong)"/>
+          <text x="197" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="700" font-size="15" letter-spacing="0.08em" fill="currentColor">VEHICLE A</text>
+          <text x="884" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="700" font-size="15" letter-spacing="0.08em" fill="currentColor">VEHICLE B</text>
+          <text x="540" y="30" text-anchor="middle" font-family="var(--font-mono)" font-size="10.5" letter-spacing="0.1em" fill="currentColor" fill-opacity="0.55">AIR INTERFACE &middot; 5.875&ndash;5.925 GHz</text>
+
+          <!-- ===== intra-vehicle arrows ===== -->
+          <g stroke="currentColor" stroke-opacity="0.4" stroke-width="1.6" fill="none">
+            <!-- A TX row -->
+            <line x1="110" y1="140" x2="146" y2="140" marker-end="url(#arrow)"/>
+            <line x1="230" y1="140" x2="266" y2="140" marker-end="url(#arrow)"/>
+            <line x1="340" y1="152" x2="360" y2="220" marker-end="url(#arrow)"/>
+            <!-- A RX row -->
+            <line x1="360" y1="260" x2="340" y2="328" marker-end="url(#arrow)"/>
+            <line x1="270" y1="340" x2="259" y2="340" marker-end="url(#arrow)"/>
+            <line x1="175" y1="340" x2="164" y2="340" marker-end="url(#arrow)"/>
+            <line x1="80" y1="340" x2="69" y2="340" marker-end="url(#arrow)"/>
+            <!-- B TX row -->
+            <line x1="970" y1="140" x2="934" y2="140" marker-end="url(#arrow)"/>
+            <line x1="850" y1="140" x2="814" y2="140" marker-end="url(#arrow)"/>
+            <line x1="740" y1="152" x2="720" y2="220" marker-end="url(#arrow)"/>
+            <!-- B RX row -->
+            <line x1="720" y1="260" x2="740" y2="328" marker-end="url(#arrow)"/>
+            <line x1="810" y1="340" x2="821" y2="340" marker-end="url(#arrow)"/>
+            <line x1="905" y1="340" x2="916" y2="340" marker-end="url(#arrow)"/>
+            <line x1="1000" y1="340" x2="1011" y2="340" marker-end="url(#arrow)"/>
+          </g>
+
+          <!-- gap arrows -->
+          <line x1="408" y1="228" x2="668" y2="228" stroke="var(--signal)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+          <line x1="672" y1="252" x2="412" y2="252" stroke="var(--safe)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+          <rect x="490" y="215" width="100" height="14" fill="var(--panel)"/>
+          <text x="540" y="225" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="var(--signal)">A &#8594; B broadcast</text>
+          <rect x="490" y="246" width="100" height="14" fill="var(--panel)"/>
+          <text x="540" y="256" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="var(--safe)">B &#8594; A broadcast</text>
+
+          <!-- ===== nodes ===== -->
+          <g font-family="var(--font-display)" font-weight="600" font-size="11" text-anchor="middle" fill="currentColor">
+            <!-- Vehicle A TX row -->
+            <g id="gnss-A"><rect x="30" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-gnss" x="36" y="122" width="13" height="13"/><text x="72" y="136">GNSS</text><text x="72" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">/ NavIC</text></g>
+            <g id="enc-A"><rect x="150" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-chip" x="156" y="122" width="13" height="13"/><text x="194" y="136">Baseband</text><text x="194" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">encode</text></g>
+            <g id="sign-A"><rect x="270" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-lock" x="276" y="122" width="13" height="13"/><text x="314" y="136">HSM</text><text x="314" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">sign</text></g>
+            <!-- Vehicle A antenna -->
+            <g id="ant-A"><rect x="352" y="212" width="56" height="56" rx="28" fill="var(--panel-raised)" stroke="var(--signal)" stroke-opacity="0.6"/><use href="#icon-rf" x="368" y="216" width="24" height="24"/><text x="380" y="250" font-family="var(--font-mono)" font-weight="400" font-size="8.5" fill-opacity="0.6">5.9GHz</text></g>
+            <!-- Vehicle A RX row -->
+            <g id="verify-A"><rect x="270" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-lock" x="276" y="322" width="13" height="13"/><text x="314" y="336">HSM</text><text x="314" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">verify</text></g>
+            <g id="app-A"><rect x="175" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-shield" x="181" y="322" width="13" height="13"/><text x="219" y="336">Safety</text><text x="219" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">stack</text></g>
+            <g id="can-A"><rect x="80" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-bus" x="86" y="329" width="13" height="13"/><text x="124" y="342">CAN bus</text></g>
+            <g id="cluster-A"><rect x="-15" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-gauge" x="-9" y="322" width="13" height="13"/><text x="29" y="336">Cluster</text><text x="29" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">/ ADAS</text></g>
+
+            <!-- Vehicle B TX row -->
+            <g id="gnss-B"><rect x="970" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-gnss" x="976" y="122" width="13" height="13"/><text x="1014" y="136">GNSS</text><text x="1014" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">/ NavIC</text></g>
+            <g id="enc-B"><rect x="850" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-chip" x="856" y="122" width="13" height="13"/><text x="894" y="136">Baseband</text><text x="894" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">encode</text></g>
+            <g id="sign-B"><rect x="730" y="118" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-lock" x="736" y="122" width="13" height="13"/><text x="774" y="136">HSM</text><text x="774" y="150" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">sign</text></g>
+            <!-- Vehicle B antenna -->
+            <g id="ant-B"><rect x="672" y="212" width="56" height="56" rx="28" fill="var(--panel-raised)" stroke="var(--safe)" stroke-opacity="0.6"/><use href="#icon-rf" x="688" y="216" width="24" height="24"/><text x="700" y="250" font-family="var(--font-mono)" font-weight="400" font-size="8.5" fill-opacity="0.6">5.9GHz</text></g>
+            <!-- Vehicle B RX row -->
+            <g id="verify-B"><rect x="730" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-lock" x="736" y="322" width="13" height="13"/><text x="774" y="336">HSM</text><text x="774" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">verify</text></g>
+            <g id="app-B"><rect x="825" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-shield" x="831" y="322" width="13" height="13"/><text x="869" y="336">Safety</text><text x="869" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">stack</text></g>
+            <g id="can-B"><rect x="920" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-bus" x="926" y="329" width="13" height="13"/><text x="964" y="342">CAN bus</text></g>
+            <g id="cluster-B"><rect x="1015" y="318" width="80" height="44" rx="3" fill="var(--panel-raised)" stroke="currentColor" stroke-opacity="0.35"/><use href="#icon-gauge" x="1021" y="322" width="13" height="13"/><text x="1059" y="336">Cluster</text><text x="1059" y="350" font-family="var(--font-mono)" font-weight="400" font-size="9" fill-opacity="0.6">/ ADAS</text></g>
+          </g>
+
+          <!-- animated packets -->
+          <circle id="dotAB" r="8" fill="var(--signal)" opacity="0" filter="url(#glow)"/>
+          <circle id="dotBA" r="8" fill="var(--safe)" opacity="0" filter="url(#glow)"/>
+        </svg>
+        <figcaption>Two independent, continuous broadcasts &mdash; not a request/response. Every equipped vehicle runs both sides of this diagram, all the time.</figcaption>
+      </figure>
+    </div>
+
+    <div class="telemetry">
+      <div class="telemetry-head">
+        <h2>Sidelink Spec</h2>
+        <div class="specs">
+          <span class="spec-chip"><b>BAND</b> 5.875&ndash;5.925 GHz</span>
+          <span class="spec-chip"><b>PROTOCOL</b> C-V2X PC5</span>
+          <span class="spec-chip"><b>MESSAGE</b> BSM (J2735)</span>
+          <span class="spec-chip"><b>RATE</b> 10 Hz</span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--signal)"></i>A &#8594; B</span>
+        <span><i style="background:var(--safe)"></i>B &#8594; A</span>
+      </div>
+      <div class="log" id="logPanel">
+        <div class="empty">Press Play to trace one broadcast cycle.</div>
+      </div>
+      <div class="controls">
+        <span class="hint">4.0s cycle</span>
+        <button class="run-btn" id="runBtn">Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline">
+    <div class="section-label">The four boundary crossings</div>
+    <h2>Same components, both directions</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 10-13 0c0 5.4 6.5 11 6.5 11z"/><circle cx="12" cy="10" r="2.1"/></svg>
+        <h3>Sense &amp; Assemble</h3>
+        <p>GNSS fixes the vehicle's position; the baseband processor packages it with heading, speed, and brake state into a Basic Safety Message.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="12" height="9" rx="1.5"/><path d="M8.5 10V7a3.5 3.5 0 017 0v3"/></svg>
+        <h3>Sign &amp; Transmit</h3>
+        <p>The HSM signs the packet with a rotating pseudonym certificate, then the radio broadcasts it over the 5.9GHz sidelink &mdash; no cell tower involved.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 12a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2z" fill="currentColor" stroke="none"/><path d="M8.5 11a5 5 0 017 0M5.5 8a9.5 9.5 0 0113 0"/></svg>
+        <h3>Receive &amp; Verify</h3>
+        <p>The other vehicle's radio picks it up directly; its own HSM checks the signature against a trusted certificate before anything downstream acts on it.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17c2-1 3-3 3-5V8a2 2 0 012-2h6a2 2 0 012 2v4c0 2 1 4 3 5"/><path d="M9 19a3 3 0 006 0"/></svg>
+        <h3>Decide &amp; Act</h3>
+        <p>The safety stack checks the trajectory, posts a result to the CAN bus, and the instrument cluster or ADAS acts on it &mdash; typically inside 100 milliseconds, end to end.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">This diagram mirrors the reference OBU architecture used elsewhere in this series, split into its transmit and receive paths for clarity. Real implementations vary by chipset vendor; component names and the 100ms figure are illustrative, not measured from a certified AIS-230 device.</p>
+</div>
+
+<script>
+(function(){
+  var clockVal = document.getElementById('clockVal');
+  var modePill = document.getElementById('modePill');
+  var hudBanner = document.getElementById('hudBanner');
+  var logPanel = document.getElementById('logPanel');
+  var runBtn = document.getElementById('runBtn');
+  var dotAB = document.getElementById('dotAB');
+  var dotBA = document.getElementById('dotBA');
+
+  var SEG = 0.5;
+
+  var hopsAB = [
+    { p:[70,140],   tag:'GNSS',   node:'gnss-A',    msg:"Vehicle A fixes position — GPS + NavIC" },
+    { p:[190,140],  tag:'ENC',    node:'enc-A',     msg:"Vehicle A's baseband assembles the Basic Safety Message" },
+    { p:[310,140],  tag:'SIGN',   node:'sign-A',    msg:"Vehicle A's HSM signs the packet with its pseudonym certificate" },
+    { p:[380,240],  tag:'TX',     node:'ant-A',     msg:"Vehicle A transmits — 5.9GHz PC5 sidelink, 10Hz" },
+    { p:[700,240],  tag:'RX',     node:'ant-B',     msg:"Vehicle B's radio receives the broadcast" },
+    { p:[770,340],  tag:'VERIFY', node:'verify-B',  msg:"Vehicle B's HSM verifies the signature — trusted" },
+    { p:[865,340],  tag:'CALC',   node:'app-B',     msg:"Vehicle B's safety stack checks the trajectory — no conflict" },
+    { p:[960,340],  tag:'CAN',    node:'can-B',     msg:"Result posted to Vehicle B's CAN bus" },
+    { p:[1055,340], tag:'HMI',    node:'cluster-B', msg:"Vehicle B's cluster shows a nearby-vehicle indicator" }
+  ];
+  var hopsBA = [
+    { p:[1010,140], tag:'GNSS',   node:'gnss-B',    msg:"Vehicle B fixes position — GPS + NavIC" },
+    { p:[890,140],  tag:'ENC',    node:'enc-B',     msg:"Vehicle B's baseband assembles the Basic Safety Message" },
+    { p:[770,140],  tag:'SIGN',   node:'sign-B',    msg:"Vehicle B's HSM signs the packet with its pseudonym certificate" },
+    { p:[700,240],  tag:'TX',     node:'ant-B',     msg:"Vehicle B transmits — 5.9GHz PC5 sidelink, 10Hz" },
+    { p:[380,240],  tag:'RX',     node:'ant-A',     msg:"Vehicle A's radio receives the broadcast" },
+    { p:[310,340],  tag:'VERIFY', node:'verify-A',  msg:"Vehicle A's HSM verifies the signature — trusted" },
+    { p:[215,340],  tag:'CALC',   node:'app-A',     msg:"Vehicle A's safety stack checks the trajectory — no conflict" },
+    { p:[120,340],  tag:'CAN',    node:'can-A',     msg:"Result posted to Vehicle A's CAN bus" },
+    { p:[25,340],   tag:'HMI',    node:'cluster-A', msg:"Vehicle A's cluster shows a nearby-vehicle indicator" }
+  ];
+
+  var running = false, ended = false, simTime = 0, lastFrame = 0;
+  var nextLogAB, nextLogBA;
+
+  function lerp(a, b, t){ return a + (b - a) * t; }
+
+  var nodeIds = ['gnss-A','enc-A','sign-A','ant-A','verify-A','app-A','can-A','cluster-A',
+                 'gnss-B','enc-B','sign-B','ant-B','verify-B','app-B','can-B','cluster-B'];
+  var nodeDefaults = {};
+  nodeIds.forEach(function(id){
+    var g = document.getElementById(id);
+    if (!g) return;
+    var rect = g.querySelector('rect');
+    nodeDefaults[id] = {
+      opacity: rect.getAttribute('stroke-opacity') || '1',
+      width: rect.getAttribute('stroke-width') || '1'
+    };
+  });
+
+  function litUp(nodeId){
+    var g = document.getElementById(nodeId);
+    if (!g) return;
+    var rect = g.querySelector('rect');
+    var def = nodeDefaults[nodeId] || { opacity: '1', width: '1' };
+    clearTimeout(rect._litTimer);
+    rect.setAttribute('stroke-opacity', '1');
+    rect.setAttribute('stroke-width', '2.6');
+    rect._litTimer = setTimeout(function(){
+      rect.setAttribute('stroke-opacity', def.opacity);
+      rect.setAttribute('stroke-width', def.width);
+    }, 650);
+  }
+
+  function log(cls, tag, msg){
+    if (logPanel.querySelector('.empty')) logPanel.innerHTML = '';
+    var line = document.createElement('div');
+    line.className = 'log-line ' + cls;
+    line.innerHTML = '<span class="ts">T+' + simTime.toFixed(2) + 's</span><span class="tag">[' + tag + ']</span><span class="msg">' + msg + '</span>';
+    logPanel.appendChild(line);
+    logPanel.scrollTop = logPanel.scrollHeight;
+  }
+
+  function positionOn(hops, elapsed){
+    var total = (hops.length - 1) * SEG;
+    var e = Math.max(0, Math.min(elapsed, total));
+    var idx = Math.max(0, Math.min(hops.length - 2, Math.floor(e / SEG)));
+    var t = (e - idx * SEG) / SEG;
+    var a = hops[idx].p, b = hops[idx + 1].p;
+    return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+  }
+
+  function reset(){
+    running = false; ended = false; simTime = 0;
+    nextLogAB = 0; nextLogBA = 0;
+    clockVal.textContent = '0.00';
+    modePill.textContent = 'STANDBY';
+    modePill.className = 'mode-pill';
+    hudBanner.className = 'hud-banner';
+    logPanel.innerHTML = '<div class="empty">Press Play to trace one broadcast cycle.</div>';
+    dotAB.setAttribute('opacity', '0');
+    dotBA.setAttribute('opacity', '0');
+    dotAB.setAttribute('cx', hopsAB[0].p[0]); dotAB.setAttribute('cy', hopsAB[0].p[1]);
+    dotBA.setAttribute('cx', hopsBA[0].p[0]); dotBA.setAttribute('cy', hopsBA[0].p[1]);
+  }
+
+  function step(dt){
+    simTime += dt;
+    clockVal.textContent = simTime.toFixed(2);
+
+    var posAB = positionOn(hopsAB, simTime);
+    var posBA = positionOn(hopsBA, simTime);
+    dotAB.setAttribute('cx', posAB[0]); dotAB.setAttribute('cy', posAB[1]);
+    dotBA.setAttribute('cx', posBA[0]); dotBA.setAttribute('cy', posBA[1]);
+
+    while (nextLogAB < hopsAB.length && simTime >= nextLogAB * SEG) {
+      var hA = hopsAB[nextLogAB];
+      log('c-ab', 'A→B ' + hA.tag, hA.msg);
+      litUp(hA.node);
+      nextLogAB++;
+    }
+    while (nextLogBA < hopsBA.length && simTime >= nextLogBA * SEG) {
+      var hB = hopsBA[nextLogBA];
+      log('c-ba', 'B→A ' + hB.tag, hB.msg);
+      litUp(hB.node);
+      nextLogBA++;
+    }
+
+    var totalDur = (hopsAB.length - 1) * SEG;
+    if (!ended && simTime >= totalDur) {
+      ended = true;
+      log('c-done', 'DONE', 'Both broadcasts delivered end to end');
+      hudBanner.classList.add('show');
+      setTimeout(function(){ hudBanner.classList.remove('show'); }, 2200);
+      modePill.textContent = 'DELIVERED';
+      modePill.className = 'mode-pill done';
+      finish();
+    }
+  }
+
+  function finish(){
+    running = false;
+    runBtn.textContent = 'Replay';
+    runBtn.disabled = false;
+  }
+
+  function loop(now){
+    if (!running) return;
+    var dt = Math.max(0, Math.min((now - lastFrame) / 1000, 0.05));
+    lastFrame = now;
+    step(dt);
+    if (running) requestAnimationFrame(loop);
+  }
+
+  function run(){
+    reset();
+    running = true;
+    dotAB.setAttribute('opacity', '1');
+    dotBA.setAttribute('opacity', '1');
+    modePill.textContent = 'TRANSMITTING';
+    modePill.className = 'mode-pill tx';
+    runBtn.textContent = 'Playing…';
+    runBtn.disabled = true;
+    lastFrame = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  runBtn.addEventListener('click', run);
+  reset();
+})();
+</script>

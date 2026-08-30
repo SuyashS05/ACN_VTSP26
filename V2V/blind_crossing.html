@@ -236,7 +236,7 @@
   @keyframes logIn{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:translateX(0);}}
   .log-line .ts{color:var(--ink-faint);flex:none;}
   .log-line .tag{flex:none;font-weight:500;}
-  .log-line .msg{color:var(--ink-dim);}
+  .log-line .msg{color:var(--ink-dim);min-width:0;}
   .log-line.c-signal .tag{color:var(--signal);}
   .log-line.c-hazard .tag{color:var(--hazard);}
   .log-line.c-critical .tag,.log-line.c-critical .msg{color:var(--critical);}
@@ -811,7 +811,7 @@
 
   function loop(now){
     if (!running) return;
-    var dt = Math.min((now - lastFrame) / 1000, 0.05);
+    var dt = Math.max(0, Math.min((now - lastFrame) / 1000, 0.05));
     lastFrame = now;
     step(dt);
     requestAnimationFrame(loop);
