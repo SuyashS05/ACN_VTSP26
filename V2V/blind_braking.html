@@ -1,0 +1,892 @@
+<title>Chain Brake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0b1220;
+    --bg-deep:#080d17;
+    --panel:#111b2e;
+    --panel-raised:#152238;
+    --hair:rgba(180,200,230,0.10);
+    --hair-strong:rgba(180,200,230,0.18);
+    --ink:#e9edf5;
+    --ink-dim:#8b93a8;
+    --ink-faint:#5b6478;
+    --signal:#3fd8cb;
+    --signal-dim:rgba(63,216,203,0.14);
+    --hazard:#ffb340;
+    --hazard-dim:rgba(255,179,64,0.14);
+    --critical:#ff5c5c;
+    --critical-dim:rgba(255,92,92,0.14);
+    --safe:#57e08a;
+    --safe-dim:rgba(87,224,138,0.14);
+    --font-display:'Rajdhani',system-ui,'Segoe UI',sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);}
+
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+    font-family:var(--font-body);
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--signal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    opacity:0;
+    animation:rise 0.6s ease-out 0.05s forwards;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--signal);
+    box-shadow:0 0 8px 1px var(--signal);
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(40px,6vw,64px);
+    line-height:0.98;
+    letter-spacing:0.01em;
+    margin:0 0 16px;
+    text-wrap:balance;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.12s forwards;
+  }
+  .sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink-dim);
+    max-width:660px;
+    margin:0 0 40px;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.2s forwards;
+  }
+  .sub strong{color:var(--ink);font-weight:600;}
+
+  @keyframes rise{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .eyebrow,h1,.sub{animation:none;opacity:1;}
+  }
+
+  .console{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width:860px){
+    .console{grid-template-columns:1fr;}
+  }
+
+  .scene-panel{
+    position:relative;
+    background:var(--bg-deep);
+    border:1px solid var(--hair-strong);
+    aspect-ratio:4/3;
+    overflow:hidden;
+  }
+  .scene-panel canvas{display:block;width:100%;height:100%;}
+
+  .corner{position:absolute;width:22px;height:22px;pointer-events:none;opacity:0.8;}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--signal);}
+  .corner.tl{top:10px;left:10px;}
+  .corner.tr{top:10px;right:10px;}
+  .corner.bl{bottom:10px;left:10px;}
+  .corner.br{bottom:10px;right:10px;}
+  .corner::before{width:100%;height:2px;top:0;left:0;}
+  .corner::after{width:2px;height:100%;top:0;left:0;}
+  .corner.tr::before{left:auto;right:0;}
+  .corner.tr::after{left:auto;right:0;}
+  .corner.bl::before{top:auto;bottom:0;}
+  .corner.bl::after{top:auto;bottom:0;}
+  .corner.br::before{top:auto;bottom:0;left:auto;right:0;}
+  .corner.br::after{top:auto;bottom:0;left:auto;right:0;}
+
+  .scanlines{
+    position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.10) 3px
+    );
+    mix-blend-mode:multiply;
+    opacity:0.5;
+  }
+
+  .clock{
+    position:absolute;top:12px;left:16px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-dim);
+    letter-spacing:0.06em;
+    z-index:3;
+  }
+  .clock b{color:var(--signal);font-weight:500;}
+
+  .mode-pill{
+    position:absolute;top:12px;right:16px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    padding:4px 10px;
+    border:1px solid var(--hair-strong);
+    background:rgba(8,13,23,0.7);
+    color:var(--ink-dim);
+    z-index:3;
+    transition:color 0.3s,border-color 0.3s;
+  }
+  .mode-pill.on{color:var(--signal);border-color:rgba(63,216,203,0.4);}
+  .mode-pill.off{color:var(--ink-faint);}
+
+  .hud-banner{
+    position:absolute;
+    left:50%;top:14%;
+    transform:translate(-50%,-8px);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:8px 18px;
+    border:1px solid var(--hazard);
+    color:var(--hazard);
+    background:rgba(8,13,23,0.85);
+    opacity:0;
+    transition:opacity 0.25s ease,transform 0.25s ease;
+    z-index:4;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .hud-banner.show{opacity:1;transform:translate(-50%,0);}
+  .hud-banner.critical{border-color:var(--critical);color:var(--critical);}
+  .hud-banner.safe{border-color:var(--safe);color:var(--safe);}
+
+  .telemetry{
+    display:flex;
+    flex-direction:column;
+    background:var(--panel);
+    border:1px solid var(--hair);
+  }
+  .telemetry-head{
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--hair);
+  }
+  .telemetry-head h2{
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 10px;
+  }
+  .specs{
+    display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .spec-chip{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-dim);
+    border:1px solid var(--hair-strong);
+    padding:3px 7px;
+    line-height:1.4;
+  }
+  .spec-chip b{color:var(--ink);font-weight:500;}
+
+  .log{
+    flex:1;
+    padding:12px 14px;
+    overflow-y:auto;
+    min-height:220px;
+    max-height:340px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    line-height:1.7;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .log::-webkit-scrollbar{width:6px;}
+  .log::-webkit-scrollbar-thumb{background:var(--hair-strong);}
+  .log .empty{color:var(--ink-faint);font-style:normal;}
+  .log-line{
+    display:flex;gap:8px;
+    opacity:0;
+    animation:logIn 0.3s ease forwards;
+  }
+  @keyframes logIn{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:translateX(0);}}
+  .log-line .ts{color:var(--ink-faint);flex:none;}
+  .log-line .tag{flex:none;font-weight:500;}
+  .log-line .msg{color:var(--ink-dim);}
+  .log-line.c-signal .tag{color:var(--signal);}
+  .log-line.c-hazard .tag{color:var(--hazard);}
+  .log-line.c-critical .tag,.log-line.c-critical .msg{color:var(--critical);}
+  .log-line.c-safe .tag{color:var(--safe);}
+  .log-line.c-dim .tag,.log-line.c-dim .msg{color:var(--ink-faint);}
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    border-top:1px solid var(--hair);
+  }
+  .toggle-wrap{display:flex;align-items:center;gap:8px;}
+  .toggle-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--ink-dim);
+  }
+  .switch{
+    position:relative;width:42px;height:22px;flex:none;
+    display:block;
+  }
+  .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .track{
+    position:absolute;inset:0;
+    background:var(--panel-raised);
+    border:1px solid var(--hair-strong);
+    transition:background 0.2s,border-color 0.2s;
+  }
+  .thumb{
+    position:absolute;top:2px;left:2px;
+    width:16px;height:16px;
+    background:var(--ink-faint);
+    transition:transform 0.2s,background 0.2s;
+  }
+  .switch input:checked + .track{border-color:rgba(63,216,203,0.5);background:rgba(63,216,203,0.08);}
+  .switch input:checked + .track .thumb{transform:translateX(20px);background:var(--signal);}
+  .switch input:focus-visible + .track{outline:2px solid var(--signal);outline-offset:2px;}
+
+  .run-btn{
+    margin-left:auto;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--signal);
+    color:#04211d;
+    border:1px solid var(--signal);
+    padding:9px 18px;
+    cursor:pointer;
+    transition:background 0.15s,transform 0.1s,opacity 0.15s;
+  }
+  .run-btn:hover{background:#59e3d7;}
+  .run-btn:active{transform:translateY(1px);}
+  .run-btn:disabled{opacity:0.5;cursor:default;}
+  .run-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+
+  .pipeline{margin-top:56px;}
+  .section-label{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+  .pipeline h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 28px;
+  }
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--hair);
+    border:1px solid var(--hair);
+  }
+  @media (max-width:760px){
+    .steps{grid-template-columns:1fr 1fr;}
+  }
+  .step{
+    background:var(--panel);
+    padding:22px 20px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .step-num{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    letter-spacing:0.08em;
+  }
+  .step svg{color:var(--signal);width:26px;height:26px;}
+  .step h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:17px;
+    margin:0;
+    letter-spacing:0.01em;
+  }
+  .step p{
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--ink-dim);
+    margin:0;
+  }
+
+  .note{
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--hair);
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-faint);
+    max-width:760px;
+  }
+</style>
+
+<div class="page">
+  <div class="eyebrow"><span class="dot"></span>AIS-230 &middot; C-V2X SIDELINK &middot; ILLUSTRATIVE SIMULATION</div>
+  <h1>Chain Brake</h1>
+  <p class="sub">A deer darts onto a two-lane highway. The lead car can't avoid it &mdash; that part happens either way. <strong>What happens to the two cars behind it depends entirely on whether they find out in time.</strong> Run it once without V2V, then again with it on.</p>
+
+  <div class="console">
+    <div class="scene-panel" id="scenePanel">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="scanlines"></div>
+      <div class="clock">T+ <b id="clockVal">0.00</b>s</div>
+      <div class="mode-pill off" id="modePill">V2V OFFLINE</div>
+      <div class="hud-banner" id="hudBanner">Collision Risk</div>
+    </div>
+
+    <div class="telemetry">
+      <div class="telemetry-head">
+        <h2>Sidelink Spec</h2>
+        <div class="specs">
+          <span class="spec-chip"><b>BAND</b> 5.875&ndash;5.925 GHz</span>
+          <span class="spec-chip"><b>PROTOCOL</b> C-V2X PC5</span>
+          <span class="spec-chip"><b>MESSAGE</b> BSM (J2735)</span>
+          <span class="spec-chip"><b>RATE</b> 10 Hz</span>
+          <span class="spec-chip"><b>RANGE</b> ~300&ndash;500 m</span>
+        </div>
+      </div>
+      <div class="log" id="logPanel">
+        <div class="empty">Press Run to start the simulation.</div>
+      </div>
+      <div class="controls">
+        <div class="toggle-wrap">
+          <span class="toggle-label">V2V</span>
+          <label class="switch">
+            <input type="checkbox" id="v2vToggle" aria-label="Toggle V2V communication">
+            <span class="track"><span class="thumb"></span></span>
+          </label>
+        </div>
+        <button class="run-btn" id="runBtn">Run Simulation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline">
+    <div class="section-label">How the warning actually spreads</div>
+    <h2>Four steps, propagating down the queue</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L21 19H3L12 3.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.3" r="0.15" fill="currentColor"/></svg>
+        <h3>Detect &amp; Brake</h3>
+        <p>Vehicle 1's driver (or sensors) sees the hazard and brakes. This part is identical with or without V2V &mdash; the technology doesn't prevent the first incident.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 12a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2z" fill="currentColor" stroke="none"/><path d="M8.5 11a5 5 0 017 0M5.5 8a9.5 9.5 0 0113 0"/></svg>
+        <h3>Broadcast Instantly</h3>
+        <p>The moment the brake is applied, a hard-brake event goes out over the sidelink &mdash; no waiting for the car behind to notice brake lights.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><path d="M6.6 12h3.8M13.6 12h3.8"/></svg>
+        <h3>Propagate Down the Queue</h3>
+        <p>Every following vehicle relays the same alert, so a car several vehicles back gets nearly the same near-zero-latency warning as the one right behind the hazard.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17c2-1 3-3 3-5V8a2 2 0 012-2h6a2 2 0 012 2v4c0 2 1 4 3 5"/><path d="M9 19a3 3 0 006 0"/></svg>
+        <h3>React Early</h3>
+        <p>Extra seconds mean real options: brake gently and stop with room to spare, or move over and keep moving &mdash; instead of a last-second panic stop.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">This is a simplified illustration of the "sudden braking ahead" scenario described under India's draft AIS-230 standard. V2V does not prevent the initial hazard &mdash; an animal, debris, a stopped vehicle &mdash; from occurring; it only shortens how long the vehicles behind take to find out about it. Timings and thresholds here are chosen for clarity, not measured from hardware.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var panel = document.getElementById('scenePanel');
+  var clockVal = document.getElementById('clockVal');
+  var modePill = document.getElementById('modePill');
+  var hudBanner = document.getElementById('hudBanner');
+  var logPanel = document.getElementById('logPanel');
+  var runBtn = document.getElementById('runBtn');
+  var v2vToggle = document.getElementById('v2vToggle');
+
+  var COL_BG = 0x0b1220;
+  var COL_BG_DEEP = 0x080d17;
+  var COL_ROAD = 0x1c2438;
+  var COL_LANE = 0xcfd6e6;
+  var COL_SHOULDER = 0x101a29;
+  var COL_GRASS = 0x14261d;
+  var COL_TRUNK = 0x2a2015;
+  var COL_LEAF = 0x1f3a26;
+  var COL_ANIMAL = 0x8a5a3a;
+  var COL_CAR1 = 0x7d4a3d;
+  var COL_CAR2 = 0x46607e;
+  var COL_CAR3 = 0x5c6350;
+  var COL_SIGNAL = 0x3fd8cb;
+  var COL_HAZARD = 0xffb340;
+  var COL_CRITICAL = 0xff5c5c;
+
+  var scene, camera, renderer;
+  var car1, car2, car3, animal;
+  var pulses = [];
+  var followX = 0;
+
+  var LANE1_Z = 1.6, LANE0_Z = -1.6;
+  var SPEED0 = 4.4;
+  var START1 = -16, START2 = -23, START3 = -30;
+  var TRIGGER_X = -5, COLLISION_X = 0;
+  var ANIMAL_Z_START = 5.6, ANIMAL_Z_END = LANE1_Z;
+  var GAP = 3.2;
+
+  function initScene(){
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(COL_BG, 26, 56);
+
+    var d = 15.5;
+    camera = new THREE.OrthographicCamera(-d, d, d * 0.72, -d * 0.72, 0.1, 200);
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor(COL_BG_DEEP, 1);
+    panel.insertBefore(renderer.domElement, panel.firstChild);
+    resize();
+
+    scene.add(new THREE.AmbientLight(0x8fa4c9, 0.75));
+    var dl = new THREE.DirectionalLight(0xfff2e0, 0.55);
+    dl.position.set(14, 22, 10);
+    scene.add(dl);
+
+    buildGround();
+    buildRoad();
+    buildTrees();
+
+    car1 = buildCar(COL_CAR1);
+    car2 = buildCar(COL_CAR2);
+    car3 = buildCar(COL_CAR3);
+    scene.add(car1.group, car2.group, car3.group);
+
+    animal = buildAnimal();
+    scene.add(animal.group);
+
+    render();
+  }
+
+  function buildGround(){
+    var g = new THREE.Mesh(
+      new THREE.PlaneGeometry(140, 60),
+      new THREE.MeshLambertMaterial({ color: COL_GRASS })
+    );
+    g.rotation.x = -Math.PI / 2;
+    g.position.y = -0.03;
+    scene.add(g);
+  }
+
+  function buildRoad(){
+    var road = new THREE.Mesh(
+      new THREE.BoxGeometry(140, 0.05, 6.6),
+      new THREE.MeshLambertMaterial({ color: COL_ROAD })
+    );
+    scene.add(road);
+
+    var shoulderMat = new THREE.MeshLambertMaterial({ color: COL_SHOULDER });
+    [4.0, -4.0].forEach(function(z){
+      var s = new THREE.Mesh(new THREE.BoxGeometry(140, 0.045, 1.4), shoulderMat);
+      s.position.z = z;
+      scene.add(s);
+    });
+
+    var laneMat = new THREE.MeshBasicMaterial({ color: COL_LANE });
+    for (var x = -68; x <= 68; x += 2.6) {
+      var dash = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.05, 0.13), laneMat);
+      dash.position.set(x, 0.03, 0);
+      scene.add(dash);
+    }
+    [3.28, -3.28].forEach(function(z){
+      var edge = new THREE.Mesh(new THREE.BoxGeometry(140, 0.05, 0.12), laneMat);
+      edge.position.z = z;
+      scene.add(edge);
+    });
+  }
+
+  function buildTrees(){
+    var trunkMat = new THREE.MeshLambertMaterial({ color: COL_TRUNK });
+    var leafMat = new THREE.MeshLambertMaterial({ color: COL_LEAF });
+    var spots = [
+      [-40, 6.4], [-30, -6.6], [-20, 6.8], [-10, -6.4],
+      [4, 6.6], [14, -6.8], [24, 6.4], [-46, -7]
+    ];
+    spots.forEach(function(s){
+      var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.3, 6), trunkMat);
+      trunk.position.set(s[0], 0.65, s[1]);
+      var leaf = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.8, 7), leafMat);
+      leaf.position.set(s[0], 2.1, s[1]);
+      scene.add(trunk, leaf);
+    });
+  }
+
+  function buildCar(color){
+    var group = new THREE.Group();
+    var body = new THREE.Mesh(
+      new THREE.BoxGeometry(1.7, 0.5, 0.95),
+      new THREE.MeshLambertMaterial({ color: color })
+    );
+    body.position.y = 0.32;
+    var cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.4, 0.82),
+      new THREE.MeshLambertMaterial({ color: 0x0e1626 })
+    );
+    cabin.position.set(-0.1, 0.72, 0);
+    var headlight = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.12, 0.7),
+      new THREE.MeshBasicMaterial({ color: 0xfff3d6 })
+    );
+    headlight.position.set(0.86, 0.36, 0);
+    var brakeMat = new THREE.MeshBasicMaterial({ color: 0x5a1414 });
+    var brake = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.7), brakeMat);
+    brake.position.set(-0.86, 0.36, 0);
+    group.add(body, cabin, headlight, brake);
+    return { group: group, brake: brakeMat, body: body.material };
+  }
+
+  function buildAnimal(){
+    var group = new THREE.Group();
+    var mat = new THREE.MeshLambertMaterial({ color: COL_ANIMAL });
+    var bodyGeo = new THREE.BoxGeometry(0.85, 0.42, 0.34);
+    var body = new THREE.Mesh(bodyGeo, mat);
+    body.position.y = 0.5;
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.26, 0.24), mat);
+    head.position.set(0.5, 0.68, 0);
+    var legGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 5);
+    group.add(body, head);
+    [[-0.3, 0.13], [-0.3, -0.13], [0.28, 0.13], [0.28, -0.13]].forEach(function(p){
+      var leg = new THREE.Mesh(legGeo, mat);
+      leg.position.set(p[0], 0.25, p[1]);
+      group.add(leg);
+    });
+    group.rotation.y = Math.PI / 2;
+    return { group: group };
+  }
+
+  function spawnPulse(position, color, big){
+    var geo = new THREE.RingGeometry(0.15, 0.32, 40);
+    var mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(position.x, 0.06, position.z);
+    scene.add(mesh);
+    pulses.push({ mesh: mesh, mat: mat, born: simTime, life: big ? 0.8 : 1.15, growth: big ? 16 : 9 });
+  }
+
+  function updatePulses(){
+    for (var i = pulses.length - 1; i >= 0; i--) {
+      var p = pulses[i];
+      var age = simTime - p.born;
+      if (age > p.life) {
+        scene.remove(p.mesh);
+        pulses.splice(i, 1);
+        continue;
+      }
+      var k = age / p.life;
+      var scale = 1 + k * p.growth;
+      p.mesh.scale.set(scale, scale, scale);
+      p.mat.opacity = 0.6 * (1 - k);
+    }
+  }
+
+  function resize(){
+    var w = panel.clientWidth, h = panel.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var aspect = w / h;
+    var d = 15.5;
+    camera.left = -d * aspect * 0.5;
+    camera.right = d * aspect * 0.5;
+    camera.top = d * 0.55;
+    camera.bottom = -d * 0.55;
+    camera.updateProjectionMatrix();
+    render();
+  }
+  window.addEventListener('resize', resize);
+
+  function render(){
+    camera.position.set(followX + 20, 22, 20);
+    camera.lookAt(followX, 0, 0);
+    renderer.render(scene, camera);
+  }
+
+  /* ---------------- simulation state ---------------- */
+  var running = false;
+  var simTime = 0, lastFrame = 0;
+  var pos1, pos2, pos3, z2;
+  var ended, impacted, car1Stopped, car2Crashed, car3Crashed, laneChangeStart;
+  var flags = {};
+
+  function resetSim(){
+    pos1 = START1; pos2 = START2; pos3 = START3; z2 = LANE1_Z;
+    ended = false; impacted = false; car1Stopped = false;
+    car2Crashed = false; car3Crashed = false; laneChangeStart = null;
+    simTime = 0; flags = {};
+    followX = (START1 + START2 + START3) / 3;
+
+    car1.group.position.set(pos1, 0, LANE1_Z);
+    car2.group.position.set(pos2, 0, LANE1_Z);
+    car3.group.position.set(pos3, 0, LANE1_Z);
+    car1.group.rotation.z = 0; car2.group.rotation.z = 0; car3.group.rotation.z = 0;
+    car1.body.color.setHex(COL_CAR1); car2.body.color.setHex(COL_CAR2); car3.body.color.setHex(COL_CAR3);
+    car1.brake.color.setHex(0x5a1414); car2.brake.color.setHex(0x5a1414); car3.brake.color.setHex(0x5a1414);
+
+    animal.group.visible = false;
+    animal.group.position.set(TRIGGER_X + 1, 0, ANIMAL_Z_START);
+
+    pulses.forEach(function(p){ scene.remove(p.mesh); });
+    pulses = [];
+
+    clockVal.textContent = '0.00';
+    hudBanner.className = 'hud-banner';
+    logPanel.innerHTML = '<div class="empty">Press Run to start the simulation.</div>';
+    render();
+  }
+
+  function setMode(on){
+    modePill.textContent = on ? 'V2V ENGAGED' : 'V2V OFFLINE';
+    modePill.className = 'mode-pill ' + (on ? 'on' : 'off');
+  }
+
+  function log(cls, tag, msg){
+    if (logPanel.querySelector('.empty')) logPanel.innerHTML = '';
+    var line = document.createElement('div');
+    line.className = 'log-line ' + cls;
+    line.innerHTML = '<span class="ts">T+' + simTime.toFixed(2) + 's</span><span class="tag">[' + tag + ']</span><span class="msg">' + msg + '</span>';
+    logPanel.appendChild(line);
+    logPanel.scrollTop = logPanel.scrollHeight;
+  }
+
+  function banner(text, cls, hideAfter){
+    hudBanner.textContent = text;
+    hudBanner.className = 'hud-banner show ' + (cls || '');
+    if (hideAfter) setTimeout(function(){ hudBanner.classList.remove('show'); }, hideAfter);
+  }
+
+  function smooth(t){ t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+
+  function step(dt){
+    simTime += dt;
+    clockVal.textContent = simTime.toFixed(2);
+    var v2vOn = v2vToggle.checked;
+
+    /* trigger: animal appears + car1 begins braking, identical in both modes */
+    if (!flags.triggered && pos1 >= TRIGGER_X) {
+      flags.triggered = true;
+      flags.triggerTime = simTime;
+      animal.group.visible = true;
+      log('c-hazard', 'HAZARD', 'Animal crossing detected ahead of Vehicle 1');
+      car1.brake.color.setHex(0xff3b3b);
+      if (v2vOn) {
+        log('c-signal', 'BSM', 'Vehicle 1 broadcasting hard-brake event');
+      } else {
+        log('c-dim', 'INFO', 'Vehicles 2 &amp; 3 &mdash; no V2V equipment');
+      }
+    }
+
+    if (flags.triggered) {
+      var tSinceTrigger = simTime - flags.triggerTime;
+
+      /* animal crosses the shoulder into lane 1 */
+      if (!impacted) {
+        var az = ANIMAL_Z_START + (ANIMAL_Z_END - ANIMAL_Z_START) * smooth(tSinceTrigger / 0.8);
+        animal.group.position.z = az;
+      }
+
+      /* car 1: mild slow while animal crosses, hard brake after impact -- identical both modes */
+      var mult1;
+      if (!impacted) {
+        mult1 = 1 - 0.4 * smooth(tSinceTrigger / 0.5);
+        pos1 += SPEED0 * mult1 * dt;
+        if (pos1 >= COLLISION_X) {
+          impacted = true;
+          flags.impactTime = simTime;
+          animal.group.visible = false;
+          spawnPulse(new THREE.Vector3(COLLISION_X, 0, LANE1_Z), COL_HAZARD, true);
+          banner('Animal Strike', 'critical', 1600);
+          log('c-hazard', 'IMPACT', 'Vehicle 1 strikes the animal &mdash; hard braking');
+        }
+      } else {
+        var bt = simTime - flags.impactTime;
+        mult1 = Math.max(0, 0.6 * (1 - smooth(bt / 1.0)));
+        pos1 += SPEED0 * mult1 * dt;
+        if (mult1 < 0.01 && !car1Stopped) {
+          car1Stopped = true;
+          log('c-dim', 'STATE', 'Vehicle 1 stopped on the roadway');
+        }
+      }
+      car1.group.position.x = pos1;
+
+      if (v2vOn) {
+        /* ---- V2V branch: car 2 changes lane, car 3 falls back to a safe gap ---- */
+        if (laneChangeStart === null) {
+          laneChangeStart = flags.triggerTime + 0.05;
+          log('c-signal', 'LINK', 'Direct broadcast received &mdash; no visual cue needed');
+        }
+        if (simTime >= laneChangeStart && !flags.warn2) {
+          flags.warn2 = true;
+          log('c-hazard', 'ACT', 'Vehicle 2 changing lanes to pass clear');
+        }
+        var laneProgress = smooth((simTime - laneChangeStart) / 1.1);
+        z2 = LANE1_Z + (LANE0_Z - LANE1_Z) * laneProgress;
+        car2.group.position.z = z2;
+        var mult2 = 0.9 + 0.1 * laneProgress;
+        pos2 += SPEED0 * mult2 * dt;
+        car2.group.position.x = pos2;
+        if (laneProgress > 0.97 && !flags.clear2) {
+          flags.clear2 = true;
+          banner('Path Clear', 'safe', 1400);
+          log('c-safe', 'CLEAR', 'Vehicle 2 clear of lane 1 &mdash; resuming speed');
+        }
+
+        if (!flags.relay3 && simTime >= flags.triggerTime + 0.15) {
+          flags.relay3 = true;
+          log('c-signal', 'RELAY', 'Alert relayed to Vehicle 3 down the queue');
+        }
+        if (flags.relay3) {
+          var remaining = (pos1 - GAP) - pos3;
+          var mult3 = remaining < 7 ? Math.max(0.03, remaining / 7) : 1;
+          pos3 += SPEED0 * mult3 * dt;
+          pos3 = Math.min(pos3, pos1 - GAP);
+          if (mult3 < 0.05 && !flags.safe3) {
+            flags.safe3 = true;
+            log('c-safe', 'SAFE', 'Vehicle 3 stopped safely &mdash; gap held');
+          }
+        } else {
+          pos3 += SPEED0 * dt;
+        }
+        car3.group.position.x = pos3;
+
+        if (!ended && flags.clear2 && pos2 > 26 && (flags.safe3 || car1Stopped)) {
+          ended = true; finish();
+        }
+      } else {
+        /* ---- no V2V: constant speed, oblivious, rear-end chain ---- */
+        if (!car2Crashed) {
+          pos2 += SPEED0 * dt;
+          if (pos2 >= pos1 - GAP) {
+            car2Crashed = true;
+            pos2 = pos1 - GAP;
+            banner('Collision', 'critical', 2200);
+            log('c-critical', 'CRASH', '<b>Vehicle 2 rear-ends Vehicle 1</b> &mdash; no warning received');
+            car2.body.color.setHex(COL_CRITICAL);
+            car2.group.rotation.z = 0.12;
+          }
+        } else {
+          pos2 = pos1 - GAP;
+        }
+        car2.group.position.x = pos2;
+
+        if (!car3Crashed) {
+          pos3 += SPEED0 * dt;
+          if (car2Crashed && pos3 >= pos2 - GAP) {
+            car3Crashed = true;
+            pos3 = pos2 - GAP;
+            log('c-critical', 'CRASH', '<b>Vehicle 3 rear-ends Vehicle 2</b> &mdash; chain collision');
+            car3.body.color.setHex(COL_CRITICAL);
+            car3.group.rotation.z = -0.1;
+          }
+        } else {
+          pos3 = pos2 - GAP;
+        }
+        car3.group.position.x = pos3;
+
+        if (!ended && car1Stopped && car2Crashed && car3Crashed) {
+          ended = true; finish();
+        }
+      }
+    } else {
+      pos1 += SPEED0 * dt; pos2 += SPEED0 * dt; pos3 += SPEED0 * dt;
+      car1.group.position.x = pos1; car2.group.position.x = pos2; car3.group.position.x = pos3;
+    }
+
+    if (v2vToggle.checked && flags.triggered && simTime - flags.triggerTime < 6 && Math.floor(simTime * 1.4) !== Math.floor((simTime - dt) * 1.4)) {
+      spawnPulse(car1.group.position, COL_SIGNAL);
+    }
+
+    followX += ((pos1 + pos2 + pos3) / 3 - followX) * Math.min(1, dt * 1.6);
+    updatePulses();
+    render();
+  }
+
+  function finish(){
+    running = false;
+    runBtn.textContent = 'Run Again';
+    runBtn.disabled = false;
+    var toggleWrap = v2vToggle.closest('.toggle-wrap');
+    toggleWrap.style.opacity = '';
+    toggleWrap.style.pointerEvents = '';
+  }
+
+  function loop(now){
+    if (!running) return;
+    var dt = Math.min((now - lastFrame) / 1000, 0.05);
+    lastFrame = now;
+    step(dt);
+    if (running) requestAnimationFrame(loop);
+  }
+
+  function run(){
+    resetSim();
+    setMode(v2vToggle.checked);
+    running = true;
+    runBtn.textContent = 'Running…';
+    runBtn.disabled = true;
+    var toggleWrap = v2vToggle.closest('.toggle-wrap');
+    toggleWrap.style.opacity = '0.55';
+    toggleWrap.style.pointerEvents = 'none';
+    lastFrame = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  runBtn.addEventListener('click', run);
+  v2vToggle.addEventListener('change', function(){
+    setMode(v2vToggle.checked);
+    if (!running) resetSim();
+  });
+
+  initScene();
+  resetSim();
+  setMode(false);
+
+  new ResizeObserver(resize).observe(panel);
+})();
+</script>

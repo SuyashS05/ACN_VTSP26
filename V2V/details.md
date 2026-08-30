@@ -185,3 +185,5 @@ MoRTH's near-term focus is V2V; **V2I is reportedly planned as a later phase**, 
 - [System Architecture](system_architecture.md) — technical stack, hardware, protocol, spectrum, security architecture
 - [Business Opportunities](businessways.md) — supply chain, key players, startup/business opportunity map
 - [Gap Analysis, Product Design & Business Case](product_business_analysis.md) — specific product concepts, BOM/cost analysis, TAM/SAM/SOM, GTM plan
+- [Blind Crossing (interactive simulation)](blind_crossing.html) — open in a browser: a 3D demo of the blind-intersection scenario with V2V toggled on/off
+- [Chain Brake (interactive simulation)](blind_braking.html) — open in a browser: a 3D demo of the "sudden braking ahead" highway pile-up scenario with V2V toggled on/off

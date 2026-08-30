@@ -199,3 +199,5 @@ graph LR
 - [Policy & Regulatory Details](details.md)
 - [Business & Startup Opportunities](businessways.md)
 - [Gap Analysis, Product Design & Business Case](product_business_analysis.md)
+- [Blind Crossing (interactive simulation)](blind_crossing.html) — open in a browser: a 3D demo of the BSM broadcast/receive/predict/warn pipeline described above
+- [Chain Brake (interactive simulation)](blind_braking.html) — open in a browser: a 3D demo of the same pipeline applied to a highway chain-reaction braking scenario

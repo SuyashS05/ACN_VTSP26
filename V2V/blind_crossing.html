@@ -1,0 +1,845 @@
+<title>Blind Crossing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0b1220;
+    --bg-deep:#080d17;
+    --panel:#111b2e;
+    --panel-raised:#152238;
+    --hair:rgba(180,200,230,0.10);
+    --hair-strong:rgba(180,200,230,0.18);
+    --ink:#e9edf5;
+    --ink-dim:#8b93a8;
+    --ink-faint:#5b6478;
+    --signal:#3fd8cb;
+    --signal-dim:rgba(63,216,203,0.14);
+    --hazard:#ffb340;
+    --hazard-dim:rgba(255,179,64,0.14);
+    --critical:#ff5c5c;
+    --critical-dim:rgba(255,92,92,0.14);
+    --safe:#57e08a;
+    --safe-dim:rgba(87,224,138,0.14);
+    --font-display:'Rajdhani',system-ui,'Segoe UI',sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);}
+
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+    font-family:var(--font-body);
+  }
+
+  /* ---------- header ---------- */
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--signal);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    opacity:0;
+    animation:rise 0.6s ease-out 0.05s forwards;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--signal);
+    box-shadow:0 0 8px 1px var(--signal);
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(40px,6vw,64px);
+    line-height:0.98;
+    letter-spacing:0.01em;
+    margin:0 0 16px;
+    text-wrap:balance;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.12s forwards;
+  }
+  .sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink-dim);
+    max-width:640px;
+    margin:0 0 40px;
+    opacity:0;
+    animation:rise 0.7s ease-out 0.2s forwards;
+  }
+  .sub strong{color:var(--ink);font-weight:600;}
+
+  @keyframes rise{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .eyebrow,h1,.sub{animation:none;opacity:1;}
+  }
+
+  /* ---------- console (scene + telemetry) ---------- */
+  .console{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width:860px){
+    .console{grid-template-columns:1fr;}
+  }
+
+  .scene-panel{
+    position:relative;
+    background:var(--bg-deep);
+    border:1px solid var(--hair-strong);
+    aspect-ratio:4/3;
+    overflow:hidden;
+  }
+  .scene-panel canvas{display:block;width:100%;height:100%;}
+
+  .corner{position:absolute;width:22px;height:22px;pointer-events:none;opacity:0.8;}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--signal);}
+  .corner.tl{top:10px;left:10px;}
+  .corner.tr{top:10px;right:10px;}
+  .corner.bl{bottom:10px;left:10px;}
+  .corner.br{bottom:10px;right:10px;}
+  .corner::before{width:100%;height:2px;top:0;left:0;}
+  .corner::after{width:2px;height:100%;top:0;left:0;}
+  .corner.tr::before{left:auto;right:0;}
+  .corner.tr::after{left:auto;right:0;}
+  .corner.bl::before{top:auto;bottom:0;}
+  .corner.bl::after{top:auto;bottom:0;}
+  .corner.br::before{top:auto;bottom:0;left:auto;right:0;}
+  .corner.br::after{top:auto;bottom:0;left:auto;right:0;}
+
+  .scanlines{
+    position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.10) 3px
+    );
+    mix-blend-mode:multiply;
+    opacity:0.5;
+  }
+
+  .clock{
+    position:absolute;top:12px;left:16px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-dim);
+    letter-spacing:0.06em;
+    z-index:3;
+  }
+  .clock b{color:var(--signal);font-weight:500;}
+
+  .mode-pill{
+    position:absolute;top:12px;right:16px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    padding:4px 10px;
+    border:1px solid var(--hair-strong);
+    background:rgba(8,13,23,0.7);
+    color:var(--ink-dim);
+    z-index:3;
+    transition:color 0.3s,border-color 0.3s;
+  }
+  .mode-pill.on{color:var(--signal);border-color:rgba(63,216,203,0.4);}
+  .mode-pill.off{color:var(--ink-faint);}
+
+  .hud-banner{
+    position:absolute;
+    left:50%;top:14%;
+    transform:translate(-50%,-8px);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:8px 18px;
+    border:1px solid var(--hazard);
+    color:var(--hazard);
+    background:rgba(8,13,23,0.85);
+    opacity:0;
+    transition:opacity 0.25s ease,transform 0.25s ease;
+    z-index:4;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .hud-banner.show{opacity:1;transform:translate(-50%,0);}
+  .hud-banner.critical{border-color:var(--critical);color:var(--critical);}
+  .hud-banner.safe{border-color:var(--safe);color:var(--safe);}
+
+  /* ---------- telemetry panel ---------- */
+  .telemetry{
+    display:flex;
+    flex-direction:column;
+    background:var(--panel);
+    border:1px solid var(--hair);
+  }
+  .telemetry-head{
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--hair);
+  }
+  .telemetry-head h2{
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 10px;
+  }
+  .specs{
+    display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .spec-chip{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-dim);
+    border:1px solid var(--hair-strong);
+    padding:3px 7px;
+    line-height:1.4;
+  }
+  .spec-chip b{color:var(--ink);font-weight:500;}
+
+  .log{
+    flex:1;
+    padding:12px 14px;
+    overflow-y:auto;
+    min-height:220px;
+    max-height:340px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    line-height:1.7;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .log::-webkit-scrollbar{width:6px;}
+  .log::-webkit-scrollbar-thumb{background:var(--hair-strong);}
+  .log .empty{color:var(--ink-faint);font-style:normal;}
+  .log-line{
+    display:flex;gap:8px;
+    opacity:0;
+    animation:logIn 0.3s ease forwards;
+  }
+  @keyframes logIn{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:translateX(0);}}
+  .log-line .ts{color:var(--ink-faint);flex:none;}
+  .log-line .tag{flex:none;font-weight:500;}
+  .log-line .msg{color:var(--ink-dim);}
+  .log-line.c-signal .tag{color:var(--signal);}
+  .log-line.c-hazard .tag{color:var(--hazard);}
+  .log-line.c-critical .tag,.log-line.c-critical .msg{color:var(--critical);}
+  .log-line.c-safe .tag{color:var(--safe);}
+  .log-line.c-dim .tag,.log-line.c-dim .msg{color:var(--ink-faint);}
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    border-top:1px solid var(--hair);
+  }
+  .toggle-wrap{display:flex;align-items:center;gap:8px;}
+  .toggle-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    color:var(--ink-dim);
+  }
+  .switch{
+    position:relative;width:42px;height:22px;flex:none;
+  }
+  .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .track{
+    position:absolute;inset:0;
+    background:var(--panel-raised);
+    border:1px solid var(--hair-strong);
+    transition:background 0.2s,border-color 0.2s;
+  }
+  .thumb{
+    position:absolute;top:2px;left:2px;
+    width:16px;height:16px;
+    background:var(--ink-faint);
+    transition:transform 0.2s,background 0.2s;
+  }
+  .switch input:checked + .track{border-color:rgba(63,216,203,0.5);background:rgba(63,216,203,0.08);}
+  .switch input:checked + .track .thumb{transform:translateX(20px);background:var(--signal);}
+  .switch input:focus-visible + .track{outline:2px solid var(--signal);outline-offset:2px;}
+
+  .run-btn{
+    margin-left:auto;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--signal);
+    color:#04211d;
+    border:1px solid var(--signal);
+    padding:9px 18px;
+    cursor:pointer;
+    transition:background 0.15s,transform 0.1s,opacity 0.15s;
+  }
+  .run-btn:hover{background:#59e3d7;}
+  .run-btn:active{transform:translateY(1px);}
+  .run-btn:disabled{opacity:0.5;cursor:default;}
+  .run-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+
+  /* ---------- pipeline ---------- */
+  .pipeline{
+    margin-top:56px;
+  }
+  .section-label{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+  .pipeline h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 28px;
+  }
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--hair);
+    border:1px solid var(--hair);
+  }
+  @media (max-width:760px){
+    .steps{grid-template-columns:1fr 1fr;}
+  }
+  .step{
+    background:var(--panel);
+    padding:22px 20px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .step-num{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    letter-spacing:0.08em;
+  }
+  .step svg{color:var(--signal);width:26px;height:26px;}
+  .step h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:17px;
+    margin:0;
+    letter-spacing:0.01em;
+  }
+  .step p{
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--ink-dim);
+    margin:0;
+  }
+
+  /* ---------- footer note ---------- */
+  .note{
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--hair);
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink-faint);
+    max-width:760px;
+  }
+  .note a{color:var(--ink-dim);}
+</style>
+
+<div class="page">
+  <div class="eyebrow"><span class="dot"></span>AIS-230 &middot; C-V2X SIDELINK &middot; ILLUSTRATIVE SIMULATION</div>
+  <h1>Blind Crossing</h1>
+  <p class="sub">Two vehicles approach a city intersection from streets a building hides from each other. Neither driver can see the other coming. <strong>Run it once without V2V, then again with it on</strong> &mdash; the only thing that changes is whether the vehicles are talking.</p>
+
+  <div class="console">
+    <div class="scene-panel" id="scenePanel">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="scanlines"></div>
+      <div class="clock">T+ <b id="clockVal">0.00</b>s</div>
+      <div class="mode-pill off" id="modePill">V2V OFFLINE</div>
+      <div class="hud-banner" id="hudBanner">Collision Risk</div>
+    </div>
+
+    <div class="telemetry">
+      <div class="telemetry-head">
+        <h2>Sidelink Spec</h2>
+        <div class="specs">
+          <span class="spec-chip"><b>BAND</b> 5.875&ndash;5.925 GHz</span>
+          <span class="spec-chip"><b>PROTOCOL</b> C-V2X PC5</span>
+          <span class="spec-chip"><b>MESSAGE</b> BSM (J2735)</span>
+          <span class="spec-chip"><b>RATE</b> 10 Hz</span>
+          <span class="spec-chip"><b>RANGE</b> ~300&ndash;500 m</span>
+        </div>
+      </div>
+      <div class="log" id="logPanel">
+        <div class="empty">Press Run to start the simulation.</div>
+      </div>
+      <div class="controls">
+        <div class="toggle-wrap">
+          <span class="toggle-label">V2V</span>
+          <label class="switch">
+            <input type="checkbox" id="v2vToggle" aria-label="Toggle V2V communication">
+            <span class="track"><span class="thumb"></span></span>
+          </label>
+        </div>
+        <button class="run-btn" id="runBtn">Run Simulation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline">
+    <div class="section-label">How the message actually moves</div>
+    <h2>Four steps, well under a second</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 12a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2z" fill="currentColor" stroke="none"/><path d="M8.5 11a5 5 0 017 0M5.5 8a9.5 9.5 0 0113 0"/></svg>
+        <h3>Broadcast</h3>
+        <p>Every equipped vehicle transmits a Basic Safety Message about ten times a second: position, heading, speed, brake state. Direct sidelink &mdash; no cell tower, no subscription.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 10-13 0c0 5.4 6.5 11 6.5 11z"/><circle cx="12" cy="10" r="2.1"/></svg>
+        <h3>Receive &amp; Localize</h3>
+        <p>Nearby vehicles pick up the broadcast directly and match it against their own GNSS fix &mdash; so they know exactly where the other vehicle is, with zero visibility.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 18L11 8"/><path d="M21 18L13 8" stroke-dasharray="2 2.4"/><circle cx="12" cy="7" r="1.7" fill="currentColor" stroke="none"/></svg>
+        <h3>Predict</h3>
+        <p>Both vehicles continuously project their trajectories forward. If the paths intersect inside a dangerous time window, a conflict is flagged in milliseconds.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L21 19H3L12 3.5z"/><path d="M12 10v4"/><circle cx="12" cy="16.3" r="0.15" fill="currentColor"/></svg>
+        <h3>Warn &amp; Act</h3>
+        <p>The driver gets an alert immediately. In an ADAS-linked vehicle, the same signal can trigger automatic braking before a human ever could.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">This is a simplified illustration of the message exchange proposed under India's draft AIS-230 standard, built for the "blind intersection" scenario &mdash; it is not a certified reference implementation. Real deployments layer this on top of, not instead of, radar, camera, and driver attention. Timings and thresholds here are chosen for clarity, not measured from hardware.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var panel = document.getElementById('scenePanel');
+  var clockVal = document.getElementById('clockVal');
+  var modePill = document.getElementById('modePill');
+  var hudBanner = document.getElementById('hudBanner');
+  var logPanel = document.getElementById('logPanel');
+  var runBtn = document.getElementById('runBtn');
+  var v2vToggle = document.getElementById('v2vToggle');
+
+  var COL_BG = 0x0b1220;
+  var COL_BG_DEEP = 0x080d17;
+  var COL_ROAD = 0x1c2438;
+  var COL_LANE = 0xcfd6e6;
+  var COL_BUILD = 0x1a2740;
+  var COL_BUILD_TOP = 0x223252;
+  var COL_WIN_ON = 0xffb340;
+  var COL_WIN_OFF = 0x2c3652;
+  var COL_CAR_A = 0x4a6285;
+  var COL_CAR_B = 0xb5583a;
+  var COL_SIGNAL = 0x3fd8cb;
+  var COL_HAZARD = 0xffb340;
+  var COL_CRITICAL = 0xff5c5c;
+
+  var scene, camera, renderer, carA, carB, brakeLightA, brakeLightB;
+  var pulses = [];
+  var W = 1, H = 1;
+
+  function initScene(){
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(COL_BG, 26, 52);
+
+    var d = 15.5;
+    camera = new THREE.OrthographicCamera(-d, d, d * 0.72, -d * 0.72, 0.1, 200);
+    camera.position.set(22, 24, 22);
+    camera.lookAt(0, 0, 0);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor(COL_BG_DEEP, 1);
+    panel.insertBefore(renderer.domElement, panel.firstChild);
+    resize();
+
+    scene.add(new THREE.AmbientLight(0x8fa4c9, 0.75));
+    var dl = new THREE.DirectionalLight(0xfff2e0, 0.55);
+    dl.position.set(14, 22, 10);
+    scene.add(dl);
+
+    buildGround();
+    buildRoads();
+    buildBuildings();
+    carA = buildCar(COL_CAR_A, 'x');
+    carB = buildCar(COL_CAR_B, 'z');
+    scene.add(carA.group, carB.group);
+    brakeLightA = carA.brake;
+    brakeLightB = carB.brake;
+
+    render();
+  }
+
+  function buildGround(){
+    var g = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      new THREE.MeshLambertMaterial({ color: COL_BG })
+    );
+    g.rotation.x = -Math.PI / 2;
+    g.position.y = -0.02;
+    scene.add(g);
+  }
+
+  function buildRoads(){
+    var mat = new THREE.MeshLambertMaterial({ color: COL_ROAD });
+    var roadWidth = 6.5;
+    var horiz = new THREE.Mesh(new THREE.BoxGeometry(40, 0.04, roadWidth), mat);
+    var vert = new THREE.Mesh(new THREE.BoxGeometry(roadWidth, 0.04, 40), mat);
+    scene.add(horiz, vert);
+
+    var laneMat = new THREE.MeshBasicMaterial({ color: COL_LANE });
+    for (var i = -18; i <= 18; i += 2.4) {
+      if (Math.abs(i) < 4.5) continue;
+      var dashH = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.14), laneMat);
+      dashH.position.set(i, 0.03, 0);
+      var dashV = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 1.2), laneMat);
+      dashV.position.set(0, 0.03, i);
+      scene.add(dashH, dashV);
+    }
+  }
+
+  function buildBuildings(){
+    addBuilding(-7.6, -7.6, 5.4, 5.0, 8.6);
+    addBuilding(-8.2, -2.6, 3.4, 3.0, 5.4);
+    addBuilding(9.5, 9.0, 5.6, 5.0, 6.5);
+    addBuilding(10.5, -9.6, 4.4, 4.0, 4.6);
+  }
+
+  function addBuilding(x, z, w, depth, h){
+    var body = new THREE.Mesh(
+      new THREE.BoxGeometry(w, h, depth),
+      new THREE.MeshLambertMaterial({ color: COL_BUILD })
+    );
+    body.position.set(x, h / 2, z);
+    scene.add(body);
+
+    var top = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 1.02, 0.18, depth * 1.02),
+      new THREE.MeshLambertMaterial({ color: COL_BUILD_TOP })
+    );
+    top.position.set(x, h + 0.09, z);
+    scene.add(top);
+
+    var faces = [
+      { nx: 1, nz: 0, len: depth, off: w / 2 + 0.02 },
+      { nx: 0, nz: 1, len: w, off: depth / 2 + 0.02 }
+    ];
+    faces.forEach(function(f){
+      var cols = Math.max(2, Math.round(f.len / 1.1));
+      var rows = Math.max(2, Math.round(h / 1.3));
+      for (var c = 0; c < cols; c++) {
+        for (var r = 0; r < rows; r++) {
+          var lit = Math.random() > 0.55;
+          var win = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.5, 0.7),
+            new THREE.MeshBasicMaterial({ color: lit ? COL_WIN_ON : COL_WIN_OFF })
+          );
+          var alongOffset = (c - (cols - 1) / 2) * (f.len / cols);
+          var yPos = 0.9 + r * (h - 1.2) / rows;
+          if (f.nx) {
+            win.position.set(x + f.off, yPos, z + alongOffset);
+            win.rotation.y = Math.PI / 2;
+          } else {
+            win.position.set(x + alongOffset, yPos, z + f.off);
+          }
+          scene.add(win);
+        }
+      }
+    });
+  }
+
+  function buildCar(color, axis){
+    var group = new THREE.Group();
+    var body = new THREE.Mesh(
+      new THREE.BoxGeometry(1.7, 0.5, 0.95),
+      new THREE.MeshLambertMaterial({ color: color })
+    );
+    body.position.y = 0.32;
+    var cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.4, 0.82),
+      new THREE.MeshLambertMaterial({ color: 0x0e1626 })
+    );
+    cabin.position.set(-0.1, 0.72, 0);
+    var headlight = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.12, 0.7),
+      new THREE.MeshBasicMaterial({ color: 0xfff3d6 })
+    );
+    headlight.position.set(0.86, 0.36, 0);
+    var brake = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.12, 0.7),
+      new THREE.MeshBasicMaterial({ color: 0x5a1414 })
+    );
+    brake.position.set(-0.86, 0.36, 0);
+    group.add(body, cabin, headlight, brake);
+
+    if (axis === 'z') group.rotation.y = Math.PI / 2;
+
+    return { group: group, brake: brake.material, axis: axis };
+  }
+
+  function spawnPulse(position, color){
+    var geo = new THREE.RingGeometry(0.15, 0.32, 40);
+    var mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(position.x, 0.06, position.z);
+    scene.add(mesh);
+    pulses.push({ mesh: mesh, mat: mat, born: simTime, life: 1.15 });
+  }
+
+  function updatePulses(){
+    for (var i = pulses.length - 1; i >= 0; i--) {
+      var p = pulses[i];
+      var age = simTime - p.born;
+      if (age > p.life) {
+        scene.remove(p.mesh);
+        pulses.splice(i, 1);
+        continue;
+      }
+      var k = age / p.life;
+      var scale = 1 + k * 9;
+      p.mesh.scale.set(scale, scale, scale);
+      p.mat.opacity = 0.6 * (1 - k);
+    }
+  }
+
+  function resize(){
+    var w = panel.clientWidth, h = panel.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var aspect = w / h;
+    var d = 15.5;
+    camera.left = -d * aspect * 0.5;
+    camera.right = d * aspect * 0.5;
+    camera.top = d * 0.55;
+    camera.bottom = -d * 0.55;
+    camera.updateProjectionMatrix();
+    render();
+  }
+  window.addEventListener('resize', resize);
+
+  function render(){ renderer.render(scene, camera); }
+
+  /* ---------------- simulation state machine ---------------- */
+  var START = -15, SPEED = 3, EXIT = 9;
+  var running = false;
+  var simTime = 0, lastFrame = 0;
+  var posA, posB, brakeStartA, ended, crashed, lastPulseAt;
+  var flags = {};
+
+  function resetSim(){
+    posA = START; posB = START;
+    brakeStartA = null;
+    ended = false; crashed = false;
+    simTime = 0; lastPulseAt = -10;
+    flags = {};
+    carA.group.position.set(posA, 0, 0);
+    carB.group.position.set(0, 0, posB);
+    carA.group.rotation.z = 0; carB.group.rotation.z = 0;
+    brakeLightA.color.setHex(0x5a1414);
+    brakeLightB.color.setHex(0x5a1414);
+    pulses.forEach(function(p){ scene.remove(p.mesh); });
+    pulses = [];
+    clockVal.textContent = '0.00';
+    hudBanner.className = 'hud-banner';
+    logPanel.innerHTML = '<div class="empty">Press Run to start the simulation.</div>';
+    render();
+  }
+
+  function setMode(on){
+    modePill.textContent = on ? 'V2V ENGAGED' : 'V2V OFFLINE';
+    modePill.className = 'mode-pill ' + (on ? 'on' : 'off');
+  }
+
+  function log(cls, tag, msg){
+    if (logPanel.querySelector('.empty')) logPanel.innerHTML = '';
+    var line = document.createElement('div');
+    line.className = 'log-line ' + cls;
+    line.innerHTML = '<span class="ts">T+' + simTime.toFixed(2) + 's</span><span class="tag">[' + tag + ']</span><span class="msg">' + msg + '</span>';
+    logPanel.appendChild(line);
+    logPanel.scrollTop = logPanel.scrollHeight;
+  }
+
+  function banner(text, cls, hideAfter){
+    hudBanner.textContent = text;
+    hudBanner.className = 'hud-banner show ' + (cls || '');
+    if (hideAfter) {
+      setTimeout(function(){ hudBanner.classList.remove('show'); }, hideAfter);
+    }
+  }
+
+  function brakeMultiplier(bt){
+    if (bt < 0) return 1;
+    if (bt < 0.5) return 1 - 0.72 * (bt / 0.5);
+    if (bt < 1.3) return 0.28;
+    if (bt < 2.0) return 0.28 + 0.72 * ((bt - 1.3) / 0.7);
+    return 1;
+  }
+
+  function step(dt){
+    simTime += dt;
+    clockVal.textContent = simTime.toFixed(2);
+    var v2vOn = v2vToggle.checked;
+
+    if (v2vOn && !crashed) {
+      if (simTime - lastPulseAt > 0.7) {
+        spawnPulse(carA.group.position, COL_SIGNAL);
+        spawnPulse(carB.group.position, COL_SIGNAL);
+        lastPulseAt = simTime;
+      }
+      if (!flags.link && simTime > 1.3) {
+        log('c-signal', 'LINK', 'Direct PC5 sidelink established &mdash; no line of sight required');
+        flags.link = true;
+      }
+      var distA = -posA;
+      if (!flags.hazard && distA <= 6.2) {
+        log('c-hazard', 'PATH', 'Trajectory conflict predicted at intersection');
+        banner('Collision Risk', 'critical', 1400);
+        flags.hazard = true;
+        brakeStartA = simTime;
+      }
+      if (flags.hazard && !flags.warn && simTime - brakeStartA > 0.12) {
+        log('c-hazard', 'WARN', 'Forward collision warning issued to Vehicle A');
+        flags.warn = true;
+      }
+      if (flags.hazard && !flags.brake && simTime - brakeStartA > 0.22) {
+        log('c-hazard', 'ACT', 'Vehicle A auto-brake engaged');
+        brakeLightA.color.setHex(0xff3b3b);
+        flags.brake = true;
+      }
+    } else if (!v2vOn && !crashed) {
+      if (!flags.noeq) {
+        log('c-dim', 'INFO', 'Vehicle A &mdash; no V2V equipment');
+        log('c-dim', 'INFO', 'Vehicle B &mdash; no V2V equipment');
+        flags.noeq = true;
+      }
+      if (!flags.risk && -posA <= 6.2) {
+        log('c-dim', 'RISK', 'Both vehicles blind to each other beyond the building line');
+        flags.risk = true;
+      }
+    }
+
+    var multA = 1;
+    if (v2vOn && brakeStartA !== null) {
+      multA = brakeMultiplier(simTime - brakeStartA);
+      if (multA > 0.99 && !flags.resumed && simTime - brakeStartA > 1.6) {
+        log('c-safe', 'SAFE', 'Vehicle A resuming speed &mdash; no collision');
+        brakeLightA.color.setHex(0x5a1414);
+        flags.resumed = true;
+      }
+    }
+
+    if (!crashed) {
+      posA += SPEED * multA * dt;
+      posB += SPEED * dt;
+      carA.group.position.x = posA;
+      carB.group.position.z = posB;
+
+      if (v2vOn && flags.hazard && !flags.clear && posB >= 0) {
+        log('c-safe', 'CLEAR', 'Vehicle B crossed &mdash; path clear');
+        banner('Path Clear', 'safe', 1600);
+        flags.clear = true;
+      }
+
+      if (!v2vOn && Math.abs(posA) < 0.55 && Math.abs(posB) < 0.55) {
+        crashed = true;
+        banner('Collision', 'critical', 2600);
+        log('c-critical', 'CRASH', '<b>Collision at intersection</b> &mdash; no warning issued');
+        var flashA = new THREE.MeshBasicMaterial({ color: COL_CRITICAL });
+        var flashB = new THREE.MeshBasicMaterial({ color: COL_CRITICAL });
+        carA.group.children[0].material = flashA;
+        carB.group.children[0].material = flashB;
+        carA.group.rotation.z = 0.18;
+        carB.group.rotation.z = -0.14;
+      }
+    }
+
+    updatePulses();
+
+    if (!ended) {
+      if (crashed) {
+        ended = true;
+        finish();
+      } else if (posA > EXIT && posB > EXIT) {
+        ended = true;
+        finish();
+      }
+    }
+    render();
+  }
+
+  function finish(){
+    running = false;
+    runBtn.textContent = 'Run Again';
+    runBtn.disabled = false;
+    var toggleWrap = v2vToggle.closest('.toggle-wrap');
+    toggleWrap.style.opacity = '';
+    toggleWrap.style.pointerEvents = '';
+  }
+
+  function loop(now){
+    if (!running) return;
+    var dt = Math.min((now - lastFrame) / 1000, 0.05);
+    lastFrame = now;
+    step(dt);
+    requestAnimationFrame(loop);
+  }
+
+  function run(){
+    resetSim();
+    setMode(v2vToggle.checked);
+    running = true;
+    runBtn.textContent = 'Running…';
+    runBtn.disabled = true;
+    var toggleWrap = v2vToggle.closest('.toggle-wrap');
+    toggleWrap.style.opacity = '0.55';
+    toggleWrap.style.pointerEvents = 'none';
+    lastFrame = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  runBtn.addEventListener('click', run);
+  v2vToggle.addEventListener('change', function(){
+    setMode(v2vToggle.checked);
+    if (!running) resetSim();
+  });
+
+  initScene();
+  resetSim();
+  setMode(false);
+
+  new ResizeObserver(resize).observe(panel);
+})();
+</script>
