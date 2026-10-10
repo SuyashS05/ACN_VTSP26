@@ -1,0 +1,15 @@
+
+digraph Roadmap {
+ graph [rankdir=LR, bgcolor="white", pad="0.25", nodesep="0.25", ranksep="0.32", fontname="Lato", label="Suggested 16-week research-prototype roadmap", labelloc=t, fontsize=19];
+ node [shape=box, style="rounded,filled", fillcolor="#F4F8FC", color="#1B6FAE", fontname="Lato", fontsize=10, margin="0.16,0.1"];
+ edge [color="#4E718E", penwidth=1.7, arrowsize=0.8];
+ p0 [label="W1–2\nScope + threat model\nrequirements / profile"];
+ p1 [label="W3–4\nScenario + network\nsimulator baseline"];
+ p2 [label="W5–6\nMessage contracts\ncodec + event lifecycle"];
+ p3 [label="W7–8\nReceiver validation\nfreshness / replay / plausibility", fillcolor="#EAF7FB", color="#22B8CF"];
+ p4 [label="W9–10\nRisk estimation\nwarning-only HMI", fillcolor="#E5F5F2", color="#128C85"];
+ p5 [label="W11–12\nCooperative perception\nbenchmark comparison", fillcolor="#EFEAFA", color="#8267C7"];
+ p6 [label="W13–14\nFault injection + security\nlatency / loss / spoof tests", fillcolor="#FDF4E4", color="#E9A23B"];
+ p7 [label="W15–16\nAblation + report\nreproducible demo", fillcolor="#E5F5F2", color="#128C85"];
+ p0 -> p1 -> p2 -> p3 -> p4 -> p5 -> p6 -> p7;
+}

@@ -1,0 +1,23 @@
+
+digraph Rx {
+ graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.22", ranksep="0.30", fontname="Lato", label="Receiver processing and safe degradation", labelloc=t, fontsize=19];
+ node [shape=box, style="rounded,filled", fillcolor="#F4F8FC", color="#1B6FAE", fontname="Lato", fontsize=10, margin="0.13,0.08"];
+ edge [color="#4E718E", penwidth=1.5, arrowsize=0.8, fontname="Lato", fontsize=9];
+ rx [label="Receive bounded packet"];
+ parse [label="Parse + schema/version + size checks"];
+ auth [label="Authenticate signer / trust policy"];
+ fresh [label="Freshness + replay + region checks"];
+ plaus [label="Kinematic plausibility + misbehavior checks"];
+ assoc [label="Time / frame alignment + track association"];
+ fuse [label="Fuse with local sensors; estimate uncertainty", fillcolor="#EFEAFA", color="#8267C7"];
+ risk [label="Conflict prediction: path overlap, TTC, stopping context"];
+ decision [shape=diamond, style=filled, fillcolor="#FDF4E4", color="#E9A23B", label="Relevant and\ncredible hazard?"];
+ warn [label="Warning-only HMI / bounded advisory", fillcolor="#E5F5F2", color="#128C85"];
+ ignore [label="Drop / down-weight / keep advisory-only", fillcolor="#FDF2F0", color="#D94F5C"];
+ fallback [label="If communication is absent or inconsistent: continue local sensing; do not infer road is clear", fillcolor="#F4F8FC", color="#536779"];
+ rx -> parse -> auth -> fresh -> plaus -> assoc -> fuse -> risk -> decision;
+ decision -> warn [label="yes"];
+ decision -> ignore [label="no / uncertain"];
+ rx -> fallback [style=dashed, label="no packet / timeout"];
+ ignore -> fallback [style=dashed];
+}

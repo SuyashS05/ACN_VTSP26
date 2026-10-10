@@ -14,27 +14,42 @@ The V2V project explores how connected vehicles could exchange safety messages a
 
 ### Documents
 
+- [V2V technical system guide: components, real-time communication, autonomy, and research](V2V/README.md)
 - [Policy, proposed mandate, use cases, and India-specific challenges](V2V/details.md)
 - [Technical architecture: C-V2X/PC5, vehicle hardware, messages, and security](V2V/system_architecture.md)
 - [Business and startup opportunity map](V2V/businessways.md)
 - [Product concepts, costs, market sizing, and go-to-market proposal](V2V/product_business_analysis.md)
 - [Reference links](V2V/Information.md)
 
+### Cooperative autonomous-driving research
+
+The V2V research also covers cooperative perception and planning with multimodal models. These papers and datasets are external research resources; they are not implemented by the HTML demos in this repository.
+
+- [V2V-LLM paper (arXiv:2502.09980v4)](https://arxiv.org/html/2502.09980v4) and its [V2V-QA dataset/code page](https://eddyhkchiu.github.io/v2vllm.github.io/). The paper studies sharing perception features from multiple vehicles with a centralized multimodal LLM for object reasoning and candidate trajectory planning.
+- [V2V-GoT paper (arXiv:2509.18053)](https://arxiv.org/abs/2509.18053) adds Graph-of-Thoughts reasoning for cooperative perception, prediction, and planning.
+- [V2V-GoT-QA dataset](https://huggingface.co/datasets/eddyhkchiu/V2V-GoT-QA) contains nine task types with 110,000 training and 31,000 testing QA pairs. The dataset is about 81.5 GB, and its Hugging Face browser viewer is currently unavailable; see the dataset card and [V2V-GoT code](https://github.com/eddyhkchiu/V2V-GoT) for usage.
+
+V2V-QA and V2V-GoT-QA are separate benchmarks. The V2V-GoT dataset is research data, not a live radio network or validated vehicle controller. Any autonomous response still needs vehicle-level safety validation and a safe fallback when messages, sensors, or model services fail.
+
 ### Interactive simulations
 
-The simulations are standalone HTML pages. To play them from a local checkout, start a small web server from the repository root:
+The image below is a static V2V project illustration, so it displays directly in the GitHub README:
+
+![Connected vehicles communicating over a road network](V2V/v2vimg.jpg)
+
+The simulations are standalone HTML pages. GitHub shows HTML files as source code; it does not run their JavaScript inside this README. To play them from a local checkout, start a small web server from the repository root:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then open these pages in a browser:
+Then open the local URLs below. The source files are linked too, for browsing on GitHub:
 
-- [Blind Crossing](http://localhost:8000/V2V/blind_crossing.html) - compare a blind-intersection scenario with V2V switched on or off.
-- [Chain Brake](http://localhost:8000/V2V/blind_braking.html) - explore how a hard-braking warning can propagate through following traffic.
-- [Signal Path](http://localhost:8000/V2V/signal_path.html) - follow a safety message through vehicle components in both directions.
+- **Blind Crossing** - compare a blind-intersection scenario with V2V switched on or off. [HTML source](V2V/blind_crossing.html) | `http://localhost:8000/V2V/blind_crossing.html`
+- **Chain Brake** - explore how a hard-braking warning can propagate through following traffic. [HTML source](V2V/blind_braking.html) | `http://localhost:8000/V2V/blind_braking.html`
+- **Signal Path** - follow a safety message through vehicle components in both directions. [HTML source](V2V/signal_path.html) | `http://localhost:8000/V2V/signal_path.html`
 
-The first two simulations load Three.js from a CDN; the pages also load fonts remotely. An internet connection is needed for those external assets. GitHub README pages do not execute embedded JavaScript, so the simulations cannot play inline here; use the links above with the local server.
+The first two simulations load Three.js from a CDN; the pages also load fonts remotely. An internet connection is needed for those external assets.
 
 ## 2. Human Body Actions
 

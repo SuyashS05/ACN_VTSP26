@@ -1,0 +1,15 @@
+
+digraph V2V {
+  graph [rankdir=LR, bgcolor="white", pad="0.35", nodesep="0.55", ranksep="0.7", fontname="Lato", label="Proposed V2V safety architecture — research prototype", labelloc=t, fontsize=20];
+  node [shape=box, style="rounded,filled", fillcolor="#F4F8FC", color="#1B6FAE", fontname="Lato", fontsize=14, margin="0.22,0.16", penwidth=1.6];
+  edge [color="#4E718E", penwidth=2.0, arrowsize=0.9, fontname="Lato", fontsize=11];
+  sender [label="VEHICLE A — SENDER\nSensors + motion state\nGateway / signal access\nMessage and event builder\nOBU + secure signing\nRadio / antenna", fillcolor="#EAF7FB", color="#22B8CF"];
+  receiver [label="VEHICLE B — RECEIVER\nRadio / antenna\nParse + authenticate + freshness\nPlausibility / misbehavior checks\nLocal map + sensor fusion\nRisk policy + warning HMI", fillcolor="#E5F5F2", color="#128C85"];
+  sender -> receiver [dir=both, label="Local V2V messages\nselected profile; delivery not guaranteed", color="#22B8CF", penwidth=3.2, minlen=2];
+  pki [label="TRUST / PKI OPERATIONS\nProvision • rotate • revoke • audit", fillcolor="#F1EDFB", color="#8267C7"];
+  rsu [label="OPTIONAL RSU / V2I\nRoad, signal, or work-zone context", fillcolor="#FDF4E4", color="#E9A23B"];
+  {rank=same; pki; rsu;}
+  pki -> sender [style=dashed, label="credentials / trust material"];
+  pki -> receiver [style=dashed, label="trust / revocation policy"];
+  rsu -> receiver [style=dashed, label="optional context"];
+}
