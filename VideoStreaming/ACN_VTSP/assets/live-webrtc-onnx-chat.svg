@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <filter id="glowB" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrRed" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrAmberB" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <style>
+    .hdr { font: 700 16px 'Segoe UI', system-ui, sans-serif; fill: #f8fafc; }
+    .sub { font: 400 11.5px 'Segoe UI', system-ui, sans-serif; fill: #94a3b8; }
+    .box-t { font: 700 12.5px 'Segoe UI', system-ui, sans-serif; fill: #f1f5f9; }
+    .mono { font: 600 10.5px 'Consolas', monospace; fill: #fbbf24; }
+    .small { font: 400 10.5px 'Segoe UI', system-ui, sans-serif; fill: #cbd5e1; }
+    .dash { stroke-dasharray: 7 5; animation: moveDash 1s linear infinite; }
+    @keyframes moveDash { to { stroke-dashoffset: -24; } }
+  </style>
+
+  <rect width="1050" height="360" rx="14" fill="url(#bgB)" stroke="#1e293b" stroke-width="2"/>
+
+  <text x="24" y="32" class="hdr">Pipeline B: Dual-Path Live Streaming, Yjs CRDT Whiteboard &amp; Sub-5ms ONNX Chat Moderation</text>
+  <text x="24" y="50" class="sub">LiveKit WebRTC (&lt;300ms Co-Hosting) + MediaMTX LL-HLS (10,000+ Viewers) + Yjs CRDT (&lt;5 kbps) + In-Memory Go ONNX Detoxify Filter</text>
+
+  <!-- Left: Dual-Path Live & Whiteboard -->
+  <g transform="translate(24, 72)">
+    <rect width="450" height="260" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="16" y="25" class="box-t" fill="#fbbf24">Dual-Path Live Video &amp; CRDT Whiteboard Sync</text>
+
+    <!-- Path 1: WebRTC -->
+    <rect x="16" y="40" width="418" height="62" rx="8" fill="#0f172a" stroke="#38bdf8"/>
+    <text x="28" y="60" class="box-t" fill="#38bdf8">1. Interactive Co-Hosting (&lt; 300ms Latency)</text>
+    <text x="28" y="77" class="mono" fill="#7dd3fc">LiveKit SFU Cluster (WebRTC UDP/TURN)</text>
+    <text x="28" y="93" class="small">Up to 50 active speakers in real-time mesh/SFU room</text>
+
+    <!-- Path 2: LL-HLS -->
+    <rect x="16" y="112" width="418" height="62" rx="8" fill="#0f172a" stroke="#10b981"/>
+    <text x="28" y="132" class="box-t" fill="#34d399">2. Mass Broadcast Viewing (10,000+ Viewers)</text>
+    <text x="28" y="149" class="mono" fill="#6ee7b7">LiveKit Egress / WHIP → MediaMTX → LL-HLS (0.5s Parts)</text>
+    <text x="28" y="165" class="small">Cached at Cloudflare CDN Edge (1s playlist TTL) for pennies</text>
+
+    <!-- Path 3: Yjs CRDT Whiteboard -->
+    <rect x="16" y="184" width="418" height="62" rx="8" fill="#0f172a" stroke="#a855f7"/>
+    <text x="28" y="204" class="box-t" fill="#c084fc">3. Real-Time Collaborative Whiteboard (&lt; 5 kbps)</text>
+    <text x="28" y="221" class="mono" fill="#d8b4fe">Excalidraw / Tldraw SDK + Yjs CRDT (Uint8Array Deltas)</text>
+    <text x="28" y="237" class="small">Zero video pixel overhead; Redis binary snapshots for late joiners</text>
+  </g>
+
+  <!-- Right: Real-Time NLP Chat Moderation -->
+  <g transform="translate(500, 72)">
+    <rect width="526" height="260" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="16" y="25" class="box-t" fill="#34d399">Real-Time NLP Chat Toxicity Pipeline (&lt; 5ms Total Latency)</text>
+
+    <!-- Chat Input -->
+    <rect x="18" y="45" width="125" height="58" rx="8" fill="#0f172a" stroke="#94a3b8"/>
+    <text x="80" y="68" text-anchor="middle" class="box-t">User Chat Msg</text>
+    <text x="80" y="86" text-anchor="middle" class="mono">WSS Frame</text>
+
+    <!-- Step 1: Go Trie -->
+    <rect x="178" y="45" width="150" height="58" rx="8" fill="#0f172a" stroke="#f59e0b"/>
+    <text x="253" y="66" text-anchor="middle" class="box-t">Go WS + Trie Filter</text>
+    <text x="253" y="83" text-anchor="middle" class="mono">0.1ms Regex/Aho-Corasick</text>
+    <text x="253" y="96" text-anchor="middle" class="small">Blocks exact slurs/phishing</text>
+
+    <!-- Step 2: ONNX Sidecar -->
+    <rect x="364" y="45" width="144" height="58" rx="8" fill="#0f172a" stroke="#38bdf8"/>
+    <text x="436" y="66" text-anchor="middle" class="box-t" fill="#38bdf8">ONNX Runtime Int8</text>
+    <text x="436" y="83" text-anchor="middle" class="mono" fill="#7dd3fc">4.0ms In-Memory CPU</text>
+    <text x="436" y="96" text-anchor="middle" class="small">Multilingual Detoxify</text>
+
+    <!-- Clean Branch -->
+    <rect x="30" y="160" width="215" height="80" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.8"/>
+    <text x="137" y="183" text-anchor="middle" class="box-t" fill="#34d399">✅ Score &lt; 0.75 (Clean)</text>
+    <text x="137" y="202" text-anchor="middle" class="mono" fill="#a7f3d0">Publish to Redis Pub/Sub</text>
+    <text x="137" y="220" text-anchor="middle" class="small" fill="#ecfdf5">Broadcast to Room Clients</text>
+
+    <!-- Toxic Branch -->
+    <rect x="285" y="160" width="215" height="80" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+    <text x="392" y="183" text-anchor="middle" class="box-t" fill="#f87171">🛡️ Score &gt;= 0.75 (Toxic)</text>
+    <text x="392" y="202" text-anchor="middle" class="mono" fill="#fca5a5">Drop / Shadow-Ban / Mask</text>
+    <text x="392" y="220" text-anchor="middle" class="small" fill="#fef2f2">Async Log to Moderation DB</text>
+
+    <!-- Connectors -->
+    <path d="M 143 74 L 172 74" fill="none" stroke="#f59e0b" stroke-width="2" class="dash" marker-end="url(#arrAmberB)"/>
+    <path d="M 328 74 L 358 74" fill="none" stroke="#f59e0b" stroke-width="2" class="dash" marker-end="url(#arrAmberB)"/>
+    <path d="M 410 103 L 160 154" fill="none" stroke="#10b981" stroke-width="2" class="dash" marker-end="url(#arrGreen)"/>
+    <path d="M 450 103 L 400 154" fill="none" stroke="#ef4444" stroke-width="2" class="dash" marker-end="url(#arrRed)"/>
+
+    <circle r="4" fill="#10b981" filter="url(#glowB)">
+      <animateMotion dur="1.4s" repeatCount="indefinite" path="M 410 103 L 160 154"/>
+    </circle>
+    <circle r="4" fill="#ef4444" filter="url(#glowB)">
+      <animateMotion dur="1.8s" repeatCount="indefinite" path="M 450 103 L 400 154"/>
+    </circle>
+  </g>
+</svg>
+

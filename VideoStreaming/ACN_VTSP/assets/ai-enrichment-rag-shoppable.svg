@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgC" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#131129"/>
+    </linearGradient>
+    <filter id="glowC" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <marker id="arrViolet" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#c084fc"/>
+    </marker>
+    <marker id="arrPink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f472b6"/>
+    </marker>
+  </defs>
+
+  <style>
+    .hdr { font: 700 16px 'Segoe UI', system-ui, sans-serif; fill: #f8fafc; }
+    .sub { font: 400 11.5px 'Segoe UI', system-ui, sans-serif; fill: #94a3b8; }
+    .box-t { font: 700 12.5px 'Segoe UI', system-ui, sans-serif; fill: #f1f5f9; }
+    .mono { font: 600 10.5px 'Consolas', monospace; fill: #c084fc; }
+    .small { font: 400 10.5px 'Segoe UI', system-ui, sans-serif; fill: #cbd5e1; }
+    .dash { stroke-dasharray: 7 5; animation: moveDash 1.1s linear infinite; }
+    @keyframes moveDash { to { stroke-dashoffset: -24; } }
+  </style>
+
+  <rect width="1050" height="350" rx="14" fill="url(#bgC)" stroke="#312e81" stroke-width="2"/>
+
+  <text x="24" y="32" class="hdr">Pipeline C &amp; D: Parallel Spot GPU AI Enrichment, Shoppable Video Overlays &amp; Headless MCP Server</text>
+  <text x="24" y="50" class="sub">Faster-Whisper ASR • SeamlessM4T/Kokoro Multi-Lang • Qdrant Timestamped RAG Q&amp;A &amp; Auto-MCQ • YOLOv11+CLIP Product Pop-Ups • MCP SSE</text>
+
+  <!-- Track 1: Audio & Multi-Lang -->
+  <g transform="translate(24, 72)">
+    <rect width="235" height="252" rx="10" fill="#1e1b4b" fill-opacity="0.55" stroke="#8b5cf6" stroke-width="1.6"/>
+    <text x="117" y="24" text-anchor="middle" class="box-t" fill="#c084fc">1. ASR &amp; Multi-Language</text>
+    <rect x="14" y="38" width="207" height="58" rx="6" fill="#0f172a" stroke="#4c1d95"/>
+    <text x="117" y="57" text-anchor="middle" class="mono">Faster-Whisper (large-v3-turbo)</text>
+    <text x="117" y="74" text-anchor="middle" class="small">16kHz Mono WAV → Word-Level .vtt</text>
+    <text x="117" y="89" text-anchor="middle" class="small">4x Faster CTranslate2 Int8 GPU</text>
+
+    <rect x="14" y="108" width="207" height="62" rx="6" fill="#0f172a" stroke="#4c1d95"/>
+    <text x="117" y="127" text-anchor="middle" class="mono" fill="#38bdf8">NLLB-200 + Kokoro-82M TTS</text>
+    <text x="117" y="144" text-anchor="middle" class="small">Translates .vtt (HI, ES, ZH, FR)</text>
+    <text x="117" y="160" text-anchor="middle" class="small">Dubbed .m4a Audio Renditions</text>
+
+    <rect x="14" y="182" width="207" height="56" rx="6" fill="#0f172a" stroke="#10b981"/>
+    <text x="117" y="201" text-anchor="middle" class="mono" fill="#34d399">#EXT-X-MEDIA:TYPE=AUDIO</text>
+    <text x="117" y="218" text-anchor="middle" class="small">Zero-Rebuffer Language Switch</text>
+  </g>
+
+  <!-- Track 2: RAG Q&A & Auto-MCQ -->
+  <g transform="translate(285, 72)">
+    <rect width="235" height="252" rx="10" fill="#1e1b4b" fill-opacity="0.55" stroke="#38bdf8" stroke-width="1.6"/>
+    <text x="117" y="24" text-anchor="middle" class="box-t" fill="#38bdf8">2. RAG Q&amp;A &amp; Auto-MCQ</text>
+    <rect x="14" y="38" width="207" height="58" rx="6" fill="#0f172a" stroke="#1e3a8a"/>
+    <text x="117" y="57" text-anchor="middle" class="mono" fill="#7dd3fc">60s Sliding Window Chunks</text>
+    <text x="117" y="74" text-anchor="middle" class="small">Embedded into Qdrant Vector DB</text>
+    <text x="117" y="89" text-anchor="middle" class="small">with start_time &amp; end_time</text>
+
+    <rect x="14" y="108" width="207" height="62" rx="6" fill="#0f172a" stroke="#1e3a8a"/>
+    <text x="117" y="127" text-anchor="middle" class="mono" fill="#f472b6">vLLM Llama-3.3 / Gemini 2.5</text>
+    <text x="117" y="144" text-anchor="middle" class="small">Timestamp-Cited Answers [04:12]</text>
+    <text x="117" y="160" text-anchor="middle" class="small">+ Chapter Summaries</text>
+
+    <rect x="14" y="182" width="207" height="56" rx="6" fill="#0f172a" stroke="#38bdf8"/>
+    <text x="117" y="201" text-anchor="middle" class="mono" fill="#38bdf8">Structured JSON MCQ Quiz</text>
+    <text x="117" y="218" text-anchor="middle" class="small">5-10 Questions + Explanations</text>
+  </g>
+
+  <!-- Track 3: YOLOv11 + CLIP Shoppable Video -->
+  <g transform="translate(546, 72)">
+    <rect width="235" height="252" rx="10" fill="#1e1b4b" fill-opacity="0.55" stroke="#ec4899" stroke-width="1.6"/>
+    <text x="117" y="24" text-anchor="middle" class="box-t" fill="#f472b6">3. Shoppable Video CV</text>
+    <rect x="14" y="38" width="207" height="58" rx="6" fill="#0f172a" stroke="#831843"/>
+    <text x="117" y="57" text-anchor="middle" class="mono" fill="#f472b6">FFmpeg 1 FPS + YOLOv11</text>
+    <text x="117" y="74" text-anchor="middle" class="small">Detects Apparel, Tech, Merch</text>
+    <text x="117" y="89" text-anchor="middle" class="small">Extracts Normalized [x,y,w,h]</text>
+
+    <rect x="14" y="108" width="207" height="62" rx="6" fill="#0f172a" stroke="#831843"/>
+    <text x="117" y="127" text-anchor="middle" class="mono" fill="#fbbf24">CLIP / SigLIP Visual Match</text>
+    <text x="117" y="144" text-anchor="middle" class="small">Queries Merchant Qdrant Catalog</text>
+    <text x="117" y="160" text-anchor="middle" class="small">Cosine Similarity &gt;= 0.85</text>
+
+    <rect x="14" y="182" width="207" height="56" rx="6" fill="#0f172a" stroke="#ec4899"/>
+    <text x="117" y="201" text-anchor="middle" class="mono" fill="#f472b6">products_overlay.json</text>
+    <text x="117" y="218" text-anchor="middle" class="small">Interactive UI Pop-up Overlay</text>
+  </g>
+
+  <!-- Track 4: Headless Distribution & MCP -->
+  <g transform="translate(807, 72)">
+    <rect width="219" height="252" rx="10" fill="#1e1b4b" fill-opacity="0.55" stroke="#10b981" stroke-width="1.6"/>
+    <text x="109" y="24" text-anchor="middle" class="box-t" fill="#34d399">4. Headless &amp; MCP Server</text>
+    <rect x="14" y="38" width="191" height="58" rx="6" fill="#0f172a" stroke="#065f46"/>
+    <text x="109" y="57" text-anchor="middle" class="mono" fill="#34d399">Unkey Scoped API Keys</text>
+    <text x="109" y="74" text-anchor="middle" class="small">vid_live_... + CORS Lock</text>
+    <text x="109" y="89" text-anchor="middle" class="small">&lt;acn-player&gt; Embed SDK</text>
+
+    <rect x="14" y="108" width="191" height="62" rx="6" fill="#0f172a" stroke="#065f46"/>
+    <text x="109" y="127" text-anchor="middle" class="mono" fill="#38bdf8">BullMQ HMAC Webhooks</text>
+    <text x="109" y="144" text-anchor="middle" class="small">video.transcode.ready</text>
+    <text x="109" y="160" text-anchor="middle" class="small">video.ai.transcript_ready</text>
+
+    <rect x="14" y="182" width="191" height="56" rx="6" fill="#0f172a" stroke="#a855f7"/>
+    <text x="109" y="201" text-anchor="middle" class="mono" fill="#c084fc">MCP Server (SSE / Stdio)</text>
+    <text x="109" y="218" text-anchor="middle" class="small">4 Native AI Agent Tools</text>
+  </g>
+
+  <!-- Animated Flow Connectors Between Tracks -->
+  <path d="M 259 140 L 281 140" fill="none" stroke="#c084fc" stroke-width="2" class="dash" marker-end="url(#arrViolet)"/>
+  <path d="M 520 140 L 542 140" fill="none" stroke="#f472b6" stroke-width="2" class="dash" marker-end="url(#arrPink)"/>
+  <path d="M 781 140 L 803 140" fill="none" stroke="#c084fc" stroke-width="2" class="dash" marker-end="url(#arrViolet)"/>
+</svg>
+

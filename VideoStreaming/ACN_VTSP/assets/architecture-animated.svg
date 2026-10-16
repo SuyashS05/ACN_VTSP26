@@ -1,0 +1,286 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accentBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="accentPurple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="accentGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="accentAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#34d399"/>
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#c084fc"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#fbbf24"/>
+    </marker>
+  </defs>
+
+  <style>
+    .title { font: 700 20px 'Segoe UI', system-ui, sans-serif; fill: #f8fafc; letter-spacing: 0.5px; }
+    .subtitle { font: 400 12px 'Segoe UI', system-ui, sans-serif; fill: #94a3b8; }
+    .node-title { font: 700 13px 'Segoe UI', system-ui, sans-serif; fill: #f1f5f9; }
+    .node-tech { font: 600 11px 'Consolas', 'Courier New', monospace; fill: #38bdf8; }
+    .node-desc { font: 400 11px 'Segoe UI', system-ui, sans-serif; fill: #94a3b8; }
+    .pill-text { font: 600 10px 'Consolas', 'Courier New', monospace; fill: #e2e8f0; }
+    .badge-text { font: 700 10px 'Consolas', 'Courier New', monospace; fill: #0f172a; }
+
+    .flow-line {
+      stroke-dasharray: 8 6;
+      animation: dashFlow 1.2s linear infinite;
+    }
+    .flow-line-slow {
+      stroke-dasharray: 10 8;
+      animation: dashFlow 2s linear infinite;
+    }
+    .pulse-box {
+      animation: boxPulse 3s ease-in-out infinite;
+    }
+    .pulse-gpu {
+      animation: gpuPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes dashFlow {
+      to { stroke-dashoffset: -28; }
+    }
+    @keyframes boxPulse {
+      0%, 100% { stroke-opacity: 0.6; }
+      50% { stroke-opacity: 1; }
+    }
+    @keyframes gpuPulse {
+      0%, 100% { filter: drop-shadow(0 0 2px rgba(168, 85, 247, 0.3)); }
+      50% { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.8)); }
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="1100" height="620" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Subtle Grid -->
+  <g stroke="#1e293b" stroke-width="0.5" opacity="0.5">
+    <line x1="0" y1="80" x2="1100" y2="80"/>
+    <line x1="0" y1="220" x2="1100" y2="220"/>
+    <line x1="0" y1="360" x2="1100" y2="360"/>
+    <line x1="0" y1="500" x2="1100" y2="500"/>
+    <line x1="275" y1="0" x2="275" y2="620"/>
+    <line x1="550" y1="0" x2="550" y2="620"/>
+    <line x1="825" y1="0" x2="825" y2="620"/>
+  </g>
+
+  <!-- Header Banner -->
+  <rect x="24" y="16" width="1052" height="54" rx="10" fill="#1e293b" fill-opacity="0.7" stroke="#334155"/>
+  <circle cx="50" cy="43" r="8" fill="#10b981" filter="url(#glow)">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <text x="70" y="39" class="title">ACN-VTSP: Automated Cloud-Native Video Transcoding &amp; Streaming Blueprint</text>
+  <text x="70" y="57" class="subtitle">Zero-Egress R2 Storage • KEDA Spot FFmpeg CMAF • Parallel Spot GPU AI • Sub-300ms WebRTC &amp; ONNX Chat • Headless MCP Server</text>
+
+  <!-- ==================== TIER 1: CLIENTS & EDGE ==================== -->
+  <!-- Node 1: Clients -->
+  <g transform="translate(30, 95)">
+    <rect width="230" height="105" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8" class="pulse-box"/>
+    <rect x="12" y="10" width="68" height="18" rx="9" fill="#38bdf8"/>
+    <text x="46" y="23" text-anchor="middle" class="badge-text">STAGE 1</text>
+    <text x="90" y="23" class="node-title">Client &amp; Ingest Tier</text>
+    <text x="14" y="45" class="node-tech">Next.js 15 • Flutter • Vidstack</text>
+    <text x="14" y="63" class="node-desc">• 16:9 Horizontal &amp; 9:16 Shorts UI</text>
+    <text x="14" y="79" class="node-desc">• S3 Multipart / tus.io (10MB Chunks)</text>
+    <text x="14" y="95" class="node-desc">• Pre-fetch init.mp4 + seg_000.m4s</text>
+  </g>
+
+  <!-- Node 2: Edge & CDN -->
+  <g transform="translate(310, 95)">
+    <rect width="230" height="105" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="1.8" class="pulse-box"/>
+    <rect x="12" y="10" width="68" height="18" rx="9" fill="#10b981"/>
+    <text x="46" y="23" text-anchor="middle" class="badge-text">STAGE 4</text>
+    <text x="90" y="23" class="node-title">Cloudflare CDN &amp; Gateway</text>
+    <text x="14" y="45" class="node-tech" fill="#34d399">HTTP/3 QUIC • Kong/Envoy • Unkey</text>
+    <text x="14" y="63" class="node-desc">• &gt;95% Cache Hit (.m4s 365d immutable)</text>
+    <text x="14" y="79" class="node-desc">• Signed Cookies + AES-128 HLS DRM</text>
+    <text x="14" y="95" class="node-desc">• Clerk/Keycloak OIDC (15m JWT)</text>
+  </g>
+
+  <!-- Node 3: Live & Collaboration -->
+  <g transform="translate(590, 95)">
+    <rect width="230" height="105" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1.8" class="pulse-box"/>
+    <rect x="12" y="10" width="68" height="18" rx="9" fill="#f59e0b"/>
+    <text x="46" y="23" text-anchor="middle" class="badge-text">STAGE 5</text>
+    <text x="90" y="23" class="node-title">Live SFU, Board &amp; Chat</text>
+    <text x="14" y="45" class="node-tech" fill="#fbbf24">LiveKit • MediaMTX • Yjs • ONNX</text>
+    <text x="14" y="63" class="node-desc">• Sub-300ms WebRTC + LL-HLS Egress</text>
+    <text x="14" y="79" class="node-desc">• Tldraw Yjs CRDT Sync (&lt;5 kbps)</text>
+    <text x="14" y="95" class="node-desc">• Go WS + Int8 Detoxify (&lt;5ms Filter)</text>
+  </g>
+
+  <!-- Node 4: Headless & MCP -->
+  <g transform="translate(860, 95)">
+    <rect width="210" height="105" rx="12" fill="#0f172a" stroke="#ec4899" stroke-width="1.8" class="pulse-box"/>
+    <rect x="12" y="10" width="68" height="18" rx="9" fill="#ec4899"/>
+    <text x="46" y="23" text-anchor="middle" class="badge-text">STAGE 6</text>
+    <text x="88" y="23" class="node-title">Headless &amp; MCP</text>
+    <text x="14" y="45" class="node-tech" fill="#f472b6">MCP SSE • BullMQ • Embed</text>
+    <text x="14" y="63" class="node-desc">• AI Agent Tools (SSE/Stdio)</text>
+    <text x="14" y="79" class="node-desc">• HMAC-SHA256 Webhooks</text>
+    <text x="14" y="95" class="node-desc">• &lt;acn-player&gt; Web Component</text>
+  </g>
+
+  <!-- ==================== TIER 2: EVENT BUS & WORKER POOLS ==================== -->
+  <!-- Node 5: Raw Storage & Event Bus -->
+  <g transform="translate(30, 265)">
+    <rect width="280" height="125" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>
+    <text x="16" y="26" class="node-title">Raw Ingest &amp; Event Orchestrator</text>
+    <text x="16" y="45" class="node-tech">Cloudflare R2 (Raw) + Kafka / SQS</text>
+    <text x="16" y="65" class="node-desc">1. Presigned URL Direct S3 Multipart Upload</text>
+    <text x="16" y="82" class="node-desc">2. Emits ObjectCreated Event on Completion</text>
+    <text x="16" y="99" class="node-desc">3. Temporal / BullMQ Parallel DAG Fan-out</text>
+    <text x="16" y="115" class="node-desc" fill="#38bdf8">⚡ Zero Backend RAM/Bandwidth Overhead</text>
+  </g>
+
+  <!-- Node 6: Transcoding Pool -->
+  <g transform="translate(360, 265)">
+    <rect width="330" height="125" rx="12" fill="#0f172a" stroke="#06b6d4" stroke-width="2" class="pulse-box"/>
+    <rect x="14" y="10" width="68" height="18" rx="9" fill="#06b6d4"/>
+    <text x="48" y="23" text-anchor="middle" class="badge-text">STAGE 2</text>
+    <text x="92" y="23" class="node-title">K8s + KEDA Spot Transcode Pool</text>
+    <text x="16" y="45" class="node-tech">FFmpeg • Shaka Packager • CMAF (.m4s)</text>
+    <text x="16" y="64" class="node-desc">• Single-Decode -filter_complex Multi-Bitrate</text>
+    <text x="16" y="80" class="node-desc">• 16:9 &amp; 9:16 ABR: 360p (Instant) / 720p / 1080p</text>
+    <text x="16" y="96" class="node-desc">• Tiered Codec: H.264 Instant → AV1/HEVC @ 500 Views</text>
+    <text x="16" y="113" class="node-desc" fill="#34d399">💰 Scales to 0 when idle (Saves 70-80% Compute)</text>
+  </g>
+
+  <!-- Node 7: AI GPU Pool -->
+  <g transform="translate(740, 265)">
+    <rect width="330" height="125" rx="12" fill="#0f172a" stroke="#a855f7" stroke-width="2" class="pulse-gpu"/>
+    <rect x="14" y="10" width="68" height="18" rx="9" fill="#a855f7"/>
+    <text x="48" y="23" text-anchor="middle" class="badge-text">STAGE 3</text>
+    <text x="92" y="23" class="node-title">K8s Spot GPU AI Enrichment Pool</text>
+    <text x="16" y="45" class="node-tech" fill="#c084fc">Faster-Whisper • vLLM/Gemini • YOLOv11+CLIP</text>
+    <text x="16" y="64" class="node-desc">• ASR Word-Level .vtt + NLLB/Kokoro Multi-Lang Audio</text>
+    <text x="16" y="80" class="node-desc">• 60s Sliding Window Embeddings → RAG Q&amp;A + MCQs</text>
+    <text x="16" y="96" class="node-desc">• 1 FPS Keyframes → YOLOv11 + CLIP Product Catalog</text>
+    <text x="16" y="113" class="node-desc" fill="#c084fc">🛒 Generates Shoppable products_overlay.json</text>
+  </g>
+
+  <!-- ==================== TIER 3: STORAGE & DATA STATE ==================== -->
+  <!-- Node 8: Processed Media Bucket -->
+  <g transform="translate(30, 455)">
+    <rect width="460" height="130" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="1.8"/>
+    <text x="18" y="26" class="node-title">Processed Media Origin (Cloudflare R2 — $0 Egress)</text>
+    <text x="18" y="46" class="node-tech" fill="#34d399">Master .m3u8 • DASH .mpd • CMAF .m4s • WebVTT • JSON Overlays</text>
+    <rect x="18" y="58" width="205" height="56" rx="8" fill="#1e293b" stroke="#334155"/>
+    <text x="28" y="76" class="pill-text" fill="#38bdf8">video_id/master.m3u8</text>
+    <text x="28" y="92" class="node-desc">├── 1080p/720p/360p (seg_000.m4s)</text>
+    <text x="28" y="106" class="node-desc">└── audio/{en,hi,es}/stream.m4a</text>
+    <rect x="238" y="58" width="205" height="56" rx="8" fill="#1e293b" stroke="#334155"/>
+    <text x="248" y="76" class="pill-text" fill="#c084fc">video_id/ai_metadata/</text>
+    <text x="248" y="92" class="node-desc">├── captions_{en,hi,es}.vtt</text>
+    <text x="248" y="106" class="node-desc">└── products_overlay.json</text>
+  </g>
+
+  <!-- Node 9: Polyglot Data & State Layer -->
+  <g transform="translate(530, 455)">
+    <rect width="540" height="130" rx="12" fill="#0f172a" stroke="#6366f1" stroke-width="1.8"/>
+    <text x="18" y="26" class="node-title">Polyglot Data, Vector &amp; Real-Time Telemetry Layer</text>
+    <g transform="translate(18, 40)">
+      <rect width="120" height="75" rx="8" fill="#1e293b" stroke="#3b82f6"/>
+      <text x="60" y="20" text-anchor="middle" class="pill-text" fill="#60a5fa">PostgreSQL 16</text>
+      <text x="60" y="38" text-anchor="middle" class="node-desc">Users &amp; Channels</text>
+      <text x="60" y="52" text-anchor="middle" class="node-desc">Videos &amp; MCQs</text>
+      <text x="60" y="66" text-anchor="middle" class="node-desc">Scoped API Keys</text>
+    </g>
+    <g transform="translate(148, 40)">
+      <rect width="120" height="75" rx="8" fill="#1e293b" stroke="#a855f7"/>
+      <text x="60" y="20" text-anchor="middle" class="pill-text" fill="#c084fc">Qdrant Vector</text>
+      <text x="60" y="38" text-anchor="middle" class="node-desc">60s Transcript</text>
+      <text x="60" y="52" text-anchor="middle" class="node-desc">CLIP Products</text>
+      <text x="60" y="66" text-anchor="middle" class="node-desc">Feed Candidates</text>
+    </g>
+    <g transform="translate(278, 40)">
+      <rect width="120" height="75" rx="8" fill="#1e293b" stroke="#ef4444"/>
+      <text x="60" y="20" text-anchor="middle" class="pill-text" fill="#f87171">Redis Cluster</text>
+      <text x="60" y="38" text-anchor="middle" class="node-desc">Chat Pub/Sub</text>
+      <text x="60" y="52" text-anchor="middle" class="node-desc">Sub-20ms Feeds</text>
+      <text x="60" y="66" text-anchor="middle" class="node-desc">Yjs Snapshots</text>
+    </g>
+    <g transform="translate(408, 40)">
+      <rect width="114" height="75" rx="8" fill="#1e293b" stroke="#eab308"/>
+      <text x="57" y="20" text-anchor="middle" class="pill-text" fill="#facc15">ClickHouse</text>
+      <text x="57" y="38" text-anchor="middle" class="node-desc">Watch Telemetry</text>
+      <text x="57" y="52" text-anchor="middle" class="node-desc">QoS Buffering</text>
+      <text x="57" y="66" text-anchor="middle" class="node-desc">Two-Tower Signals</text>
+    </g>
+  </g>
+
+  <!-- ==================== ANIMATED DATA CONNECTIONS ==================== -->
+  <!-- Path 1: Client -> Raw Ingest -->
+  <path id="p1" d="M 145 200 L 145 258" fill="none" stroke="#38bdf8" stroke-width="2" class="flow-line" marker-end="url(#arrowBlue)"/>
+  <rect x="75" y="218" width="140" height="18" rx="9" fill="#0f172a" stroke="#38bdf8"/>
+  <text x="145" y="231" text-anchor="middle" class="pill-text">Presigned 10MB Put</text>
+
+  <!-- Path 2: Raw Ingest -> Transcode Pool -->
+  <path id="p2" d="M 310 325 L 353 325" fill="none" stroke="#38bdf8" stroke-width="2" class="flow-line" marker-end="url(#arrowBlue)"/>
+
+  <!-- Path 3: Raw Ingest -> GPU AI Pool (Curved over top of Transcode) -->
+  <path id="p3" d="M 250 265 Q 520 220 780 260" fill="none" stroke="#c084fc" stroke-width="2" class="flow-line" marker-end="url(#arrowPurple)"/>
+  <rect x="465" y="228" width="145" height="18" rx="9" fill="#0f172a" stroke="#c084fc"/>
+  <text x="537" y="241" text-anchor="middle" class="pill-text">Parallel Kafka Fan-Out</text>
+
+  <!-- Path 4: Transcode -> Processed R2 -->
+  <path id="p4" d="M 450 390 L 320 450" fill="none" stroke="#34d399" stroke-width="2" class="flow-line" marker-end="url(#arrowGreen)"/>
+  <rect x="330" y="410" width="115" height="18" rx="9" fill="#0f172a" stroke="#34d399"/>
+  <text x="387" y="423" text-anchor="middle" class="pill-text">CMAF .m4s + .m3u8</text>
+
+  <!-- Path 5: GPU AI -> Processed R2 & Data Layer -->
+  <path id="p5" d="M 850 390 L 800 450" fill="none" stroke="#c084fc" stroke-width="2" class="flow-line" marker-end="url(#arrowPurple)"/>
+  <path id="p5b" d="M 760 390 L 460 450" fill="none" stroke="#c084fc" stroke-width="1.8" class="flow-line-slow" marker-end="url(#arrowPurple)"/>
+  <rect x="570" y="410" width="150" height="18" rx="9" fill="#0f172a" stroke="#c084fc"/>
+  <text x="645" y="423" text-anchor="middle" class="pill-text">.vtt + Overlay + Vectors</text>
+
+  <!-- Path 6: Processed R2 -> CDN -> Client -->
+  <path id="p6" d="M 260 455 L 415 205" fill="none" stroke="#34d399" stroke-width="2" class="flow-line" marker-end="url(#arrowGreen)"/>
+  <path id="p7" d="M 310 145 L 265 145" fill="none" stroke="#34d399" stroke-width="2" class="flow-line" marker-end="url(#arrowGreen)"/>
+
+  <!-- Path 8: Client <-> Live SFU -->
+  <path id="p8" d="M 540 145 L 585 145" fill="none" stroke="#fbbf24" stroke-width="2" class="flow-line" marker-end="url(#arrowAmber)"/>
+
+  <!-- Moving Glowing Data Packets (SMIL) -->
+  <circle r="4" fill="#38bdf8" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" path="M 145 200 L 145 258"/>
+  </circle>
+  <circle r="4" fill="#c084fc" filter="url(#glow)">
+    <animateMotion dur="2.2s" repeatCount="indefinite" path="M 250 265 Q 520 220 780 260"/>
+  </circle>
+  <circle r="4" fill="#34d399" filter="url(#glow)">
+    <animateMotion dur="1.8s" repeatCount="indefinite" path="M 450 390 L 320 450"/>
+  </circle>
+  <circle r="4" fill="#34d399" filter="url(#glow)">
+    <animateMotion dur="2.0s" repeatCount="indefinite" path="M 260 455 L 415 205"/>
+  </circle>
+  <circle r="4" fill="#c084fc" filter="url(#glow)">
+    <animateMotion dur="1.6s" repeatCount="indefinite" path="M 850 390 L 800 450"/>
+  </circle>
+</svg>
+

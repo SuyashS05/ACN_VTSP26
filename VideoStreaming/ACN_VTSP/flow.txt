@@ -1,0 +1,10 @@
+User Sends Chat ──► Go WebSocket Node ──► Fast Regex/Trie Filter (0.1ms: blocks exact slurs/links)
+                                              │ (Pass)
+                                              ▼
+                                   Local ONNX Runtime Sidecar (4ms: Multilingual Detoxify Int8)
+                                              │
+                      ┌───────────────────────┴───────────────────────┐
+                Score < 0.75 (Clean)                            Score >= 0.75 (Toxic)
+                      ▼                                               ▼
+           Publish to Redis Pub/Sub                        Drop / Shadow-ban / Mask
+           Broadcast to Room Clients                       Log to Moderation DB

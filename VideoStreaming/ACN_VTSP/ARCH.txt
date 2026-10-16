@@ -1,0 +1,40 @@
+[CLIENTS & EXTERNAL CONSUMERS]
+ ├── Web App (Next.js) & Mobile App (Flutter) ──► 16:9 Horizontal & 9:16 Vertical Shorts UI
+ ├── External Platforms / Social Embeds ────────► REST / GraphQL API + Signed Embed Player
+ └── AI Agents / External Workflows ────────────► Model Context Protocol (MCP) Server (SSE/Stdio)
+                        │
+                        ▼
+[EDGE & SECURITY LAYER: Cloudflare CDN + API Gateway (Kong / Envoy)]
+ ├── AuthN/AuthZ: Clerk/Keycloak (JWT/OAuth2) + Unkey (Scoped API Keys & Rate Limiting)
+ └── Edge Caching:HLS/DASH Segment Caching (.m4s / .m3u8) + Signed URLs/Cookies
+                        │
+        ┌───────────────┼───────────────────────────────┬──────────────────────────────┐
+        ▼               ▼                               ▼                              ▼
+[1. VOD UPLOAD]  [2. LIVE & COLLABORATION]      [3. CORE BACKEND & APIs]      [4. AI & FEED SERVICES]
+Multipart S3     ├── LiveKit SFU (WebRTC)       ├── API Service (Go / Node)   ├── Feed Engine (Two-Tower + Redis)
+Direct Ingest    │   Sub-300ms Video Calls      ├── Webhook Engine (BullMQ)   ├── RAG Q&A & MCQ Generator
+        │        ├── MediaMTX (WHIP/RTMP►LL-HLS)└── MCP Server (TypeScript)   └── Multi-Lingual Translation
+        ▼        ├── Yjs CRDT Sync Server
+[RAW BUCKET]     │   (Real-Time Whiteboard)
+Cloudflare R2    └── Go Chat Gateway + ONNX
+        │            (Real-Time NLP Toxicity Filter)
+        ▼
+[EVENT BUS: Apache Kafka / AWS SQS + EventBridge]
+        │
+        ├───────────────────────────────────────────────┐
+        ▼                                               ▼
+[TRANSCODING WORKER POOL (K8s + KEDA Spot Nodes)]    [AI ENRICHMENT GPU POOL (K8s Spot T4/L4 GPUs)]
+ ├── FFmpeg CMAF Packager (H.264 / HEVC / AV1)        ├── Audio Extract ──► Faster-Whisper (ASR + Timestamps)
+ ├── ABR Ladder: 360p, 720p, 1080p (16:9 & 9:16)      ├── LLM Worker ─────► Summary, Chapters, MCQ Quizzes
+ └── Thumbnail & Sprite Sheet Generator (WebP)        ├── TTS/Translate ──► Multi-Language VTT & Audio Tracks
+        │                                             └── Frame Sampler ──► YOLOv11 + CLIP (Product Detection)
+        ▼                                                                           │
+[PROCESSED MEDIA BUCKET (Cloudflare R2)] ◄──────────────────────────────────────────┘
+ (Master .m3u8, CMAF .m4s chunks, Multi-lang .vtt, Shoppable Product JSON MetadataTracks)
+        │
+        ▼
+[DATA & STATE STORAGE LAYER]
+ ├── PostgreSQL (Users, Channels, Videos, Subscriptions, API Keys, Product Catalog, MCQ Bank)
+ ├── Qdrant / pgvector (Timestamped Transcript Embeddings for Video Q&A and Semantic Search)
+ ├── Redis Cluster (Live Chat Pub/Sub, User Watch Progress, Feed Cache, Rate Limiter)
+ └── ClickHouse (Real-Time Watch Telemetry, QoS Buffering Metrics, View Counts, Feed Signals)
