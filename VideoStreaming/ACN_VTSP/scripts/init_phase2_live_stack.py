@@ -131,9 +131,9 @@ def main() -> None:
     ]
     for key, file_path, mime in artifacts:
         if file_path.exists():
-            url = f"http://localhost:9002/acn-vtsp-processed-media/{key}"
+            url = f"http://localhost:9001/buckets/acn-vtsp-processed-media/{key}"
             st, _ = http_req("PUT", url, body=file_path.read_bytes(), headers={"Content-Type": mime})
-            print(f"   ✅ Uploaded to R2 S3 (`{st}`): {url}")
+            print(f"   ✅ Uploaded to R2 Storage (`HTTP {st}`): {url}")
 
     # 7. Verify LiveKit WebRTC SFU (:7880) & MediaMTX LL-HLS (:8888)
     print("\n[7/8] LiveKit WebRTC SFU (:7880) & [8/8] MediaMTX LL-HLS (:8888):")

@@ -23,6 +23,13 @@ const PORT = Number(process.env.PORT_WHITEBOARD_YJS || 8082);
 
 const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
   res.setHeader("Content-Type", "application/json");
 
   if (req.method === "GET" && req.url?.startsWith("/api/v1/whiteboard/snapshot/")) {
@@ -67,9 +74,8 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({ service: "acn-vtsp-whiteboard-yjs-sync", status: "healthy" }));
 });
 
-if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`🎨 ACN-VTSP Yjs CRDT Whiteboard Sync Server (<5 kbps) listening on :${PORT}`);
-  });
-}
+server.listen(PORT, () => {
+  console.log(`🎨 ACN-VTSP Yjs CRDT Whiteboard Sync Server (<5 kbps) listening on http://localhost:${PORT}`);
+  console.log(`   • Inspect Room CRDT Snapshot : http://localhost:${PORT}/api/v1/whiteboard/snapshot/live_room_01`);
+});
 

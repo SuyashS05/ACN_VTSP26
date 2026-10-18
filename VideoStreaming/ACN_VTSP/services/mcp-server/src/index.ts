@@ -149,8 +149,9 @@ export async function executeMCPTool(name: string, args: Record<string, any>) {
         video_id: vid,
         allowed_origin: origin,
         expires_at_unix: exp,
-        signed_hls_url: `https://cdn.acn-vtsp.io/videos/${vid}/master.m3u8?token=${token}&exp=${exp}`,
-        embed_web_component: `<acn-video-player video-id="${vid}" token="${token}" origin="${origin}"></acn-video-player>`,
+        playable_mp4_stream_url: `http://localhost:8080/sample-3.mp4?token=${token}&exp=${exp}`,
+        signed_hls_url: `http://localhost:8080/out_cmaf/videos/${vid}/master.m3u8?token=${token}&exp=${exp}`,
+        embed_web_component: `<acn-video-player video-id="${vid}" src="http://localhost:8080/sample-3.mp4" token="${token}" origin="${origin}"></acn-video-player>`,
       };
     }
 
@@ -163,6 +164,13 @@ const PORT = Number(process.env.PORT_MCP_SERVER || 8084);
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
   res.setHeader("Content-Type", "application/json");
 
   if (req.method === "GET" && req.url === "/mcp/tools") {
@@ -192,9 +200,9 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ service: "acn-vtsp-mcp-server", status: "healthy", tools_count: ACN_MCP_TOOLS.length }));
 });
 
-if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`🤖 ACN-VTSP Headless MCP Server (SSE / JSON-RPC) listening on http://localhost:${PORT}`);
-  });
-}
+server.listen(PORT, () => {
+  console.log(`🤖 ACN-VTSP Headless MCP Server (SSE / JSON-RPC) listening on http://localhost:${PORT}`);
+  console.log(`   • List Exposed MCP Tools : http://localhost:${PORT}/mcp/tools`);
+  console.log(`   • Invoke MCP Tool (POST) : http://localhost:${PORT}/mcp/call`);
+});
 

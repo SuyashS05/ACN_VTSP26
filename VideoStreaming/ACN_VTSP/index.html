@@ -202,53 +202,59 @@
       <div class="grid-3">
         <div style="display:flex; flex-direction:column; gap:16px;">
           <div class="card">
-            <div class="player-stage">
-              <a id="shop-popup" class="shoppable-overlay" href="https://store.example.com/item/991" target="_blank">
+            <div class="player-stage" style="padding:0; background:#000;">
+              <video id="main-video" src="/sample-3.mp4" controls autoplay muted loop playsinline
+                style="width:100%; height:100%; object-fit:contain; background:#000;">
+                <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/en.vtt" srclang="en" label="English" default />
+                <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/hi.vtt" srclang="hi" label="Hindi" />
+                <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/es.vtt" srclang="es" label="Spanish" />
+              </video>
+
+              <a id="shop-popup" class="shoppable-overlay" href="https://store.example.com/item/991" target="_blank" style="z-index:10;">
                 🛒 <strong>Wireless Noise-Canceling Headphones</strong>
                 <span style="color:var(--emerald); font-weight:700; margin-left:6px;">$129</span>
                 <div style="font-size:11px; color:var(--muted); margin-top:2px;">YOLOv11 + CLIP Match (Cosine: 0.93) • Click to Buy</div>
               </a>
 
-              <div style="margin:auto; text-align:center; max-width:560px;">
-                <span id="stream-status-pill" class="badge badge-green">CMAF STREAM READY • 720p (.m4s) • 1.0x • AUDIO: EN</span>
-                <h2 style="margin:10px 0 6px; font-size:20px;">Cloud-Native CMAF Transcoding &amp; Zero-Egress Architecture Deep Dive</h2>
-                <p id="caption-box" style="margin:0; font-size:13.5px; color:#e2e8f0; background:rgba(0,0,0,0.65); padding:6px 12px; border-radius:6px;">
-                  [00:42] "FFmpeg decodes the source video once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."
-                </p>
+              <div style="position:absolute; top:14px; left:14px; z-index:10; pointer-events:none;">
+                <span id="stream-status-pill" class="badge badge-green">PLAYING sample-3.mp4 • 720p CMAF • 1.0x • AUDIO: EN</span>
+                <div id="caption-box" style="margin-top:6px; font-size:12px; color:#e2e8f0; background:rgba(8,12,20,0.82); padding:4px 10px; border-radius:6px; border:1px solid #334155;">
+                  [00:02] "FFmpeg decodes sample-3.mp4 once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."
+                </div>
               </div>
+            </div>
 
-              <div class="controls-bar">
-                <div>
-                  <span style="color:var(--muted);">Timestamp:</span>
-                  <strong id="time-display" style="font-family:monospace; color:var(--cyan);">00:42 / 06:00</strong>
-                </div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                  <label>ABR Quality:
-                    <select id="sel-quality" onchange="updatePlayerConfig()">
-                      <option value="360p">360p CMAF (800 kbps)</option>
-                      <option value="720p" selected>720p HD CMAF (2.5 Mbps)</option>
-                      <option value="1080p">1080p Full HD (5.0 Mbps)</option>
-                      <option value="1080p-AV1">1080p AV1 Tier (-45% BW)</option>
-                    </select>
-                  </label>
-                  <label>Speed:
-                    <select id="sel-speed" onchange="updatePlayerConfig()">
-                      <option value="0.25">0.25x</option>
-                      <option value="0.5">0.5x</option>
-                      <option value="1.0" selected>1.0x</option>
-                      <option value="1.25">1.25x</option>
-                      <option value="1.5">1.5x</option>
-                      <option value="2.0">2.0x</option>
-                    </select>
-                  </label>
-                  <label>#EXT-X-MEDIA Audio &amp; VTT:
-                    <select id="sel-lang" onchange="updatePlayerConfig()">
-                      <option value="en">English (Faster-Whisper)</option>
-                      <option value="hi">Hindi (NLLB-200 + Kokoro TTS)</option>
-                      <option value="es">Spanish (NLLB-200 + Kokoro TTS)</option>
-                    </select>
-                  </label>
-                </div>
+            <div class="controls-bar" style="margin-top:10px;">
+              <div>
+                <span style="color:var(--muted);">Active Stream:</span>
+                <strong id="time-display" style="font-family:monospace; color:var(--cyan);">/sample-3.mp4 (00:00)</strong>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <label>ABR Quality:
+                  <select id="sel-quality" onchange="updatePlayerConfig()">
+                    <option value="360p">360p CMAF (800 kbps)</option>
+                    <option value="720p" selected>720p HD CMAF (2.5 Mbps)</option>
+                    <option value="1080p">1080p Full HD (5.0 Mbps)</option>
+                    <option value="1080p-AV1">1080p AV1 Tier (-45% BW)</option>
+                  </select>
+                </label>
+                <label>Speed:
+                  <select id="sel-speed" onchange="updatePlayerConfig()">
+                    <option value="0.25">0.25x</option>
+                    <option value="0.5">0.5x</option>
+                    <option value="1.0" selected>1.0x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2.0">2.0x</option>
+                  </select>
+                </label>
+                <label>#EXT-X-MEDIA Audio &amp; VTT:
+                  <select id="sel-lang" onchange="updatePlayerConfig()">
+                    <option value="en">English (Faster-Whisper)</option>
+                    <option value="hi">Hindi (NLLB-200 + Kokoro TTS)</option>
+                    <option value="es">Spanish (NLLB-200 + Kokoro TTS)</option>
+                  </select>
+                </label>
               </div>
             </div>
           </div>
@@ -296,14 +302,16 @@
     <section id="tab-shorts" class="tab-view">
       <div class="grid-3">
         <div class="card" style="display:flex; justify-content:center; align-items:center; padding:24px;">
-          <div style="width:320px; aspect-ratio:9/16; background:linear-gradient(160deg,#1e1b4b,#090d16); border:2px solid var(--cyan); border-radius:24px; padding:18px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="width:320px; aspect-ratio:9/16; background:linear-gradient(160deg,#1e1b4b,#090d16); border:2px solid var(--cyan); border-radius:24px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="badge badge-green">9:16 VERTICAL SHORT</span>
               <span id="short-counter" class="badge badge-cyan">#1 / 3</span>
             </div>
+            <video id="shorts-video" src="/sample-3.mp4" controls muted loop playsinline
+              style="width:100%; flex:1; border-radius:14px; background:#000; object-fit:cover;"></video>
             <div style="text-align:center;">
-              <h3 id="short-title" style="font-size:17px;">Zero-Egress CMAF Streaming &amp; KEDA Spot Architecture</h3>
-              <p style="font-size:12px; color:var(--muted);">First-Frame Startup: <strong>140ms</strong> (Pre-fetched init.mp4 + seg_000.m4s)</p>
+              <h3 id="short-title" style="font-size:14px; margin:4px 0;">Zero-Egress CMAF Streaming &amp; KEDA Spot Architecture</h3>
+              <p style="font-size:11px; color:var(--muted); margin:0;">First-Frame Startup: <strong>140ms</strong> (Pre-fetched init.mp4 + seg_000.m4s)</p>
             </div>
             <button class="action-btn" style="width:100%; padding:10px;" onclick="nextShort()">Swipe to Next Short ▼ (Triggers Pre-Fetch)</button>
           </div>
@@ -374,27 +382,25 @@
           <p style="font-size:12.5px; color:var(--muted);">
             Generates Presigned S3 URLs so clients upload 10MB chunks directly to <code>acn-vtsp-raw</code>, bypassing backend RAM:
           </p>
-          <button class="action-btn" onclick="simulateMultipartUpload()">Simulate 50MB Video Upload &amp; Presigned URL Generation</button>
-          <pre id="upload-output">Click button to initialize a 5-part 10MB Direct S3 Multipart Upload.</pre>
+          <button class="action-btn" onclick="simulateMultipartUpload()">Simulate sample-3.mp4 Multipart Upload &amp; Presigned URLs</button>
+          <pre id="upload-output">Click button to initialize a Direct S3 Multipart Upload for sample-3.mp4.</pre>
         </div>
 
         <div class="card">
           <h3 class="card-title">
-            <span>Headless Model Context Protocol (MCP) Server Tools</span>
-            <span class="badge badge-purple">SSE / Stdio</span>
+            <span>Headless Model Context Protocol (MCP) Server Console</span>
+            <span class="badge badge-purple">http://localhost:8084/mcp/call</span>
           </h3>
-          <p style="font-size:12px; color:var(--muted);">
-             Exposed tools for Claude / Cursor / External AI Workflows:
+          <p style="font-size:12px; color:var(--muted); margin:0 0 8px;">
+            Click any tool below to invoke your live Node.js MCP Server (`:8084`) over HTTP/SSE:
           </p>
-          <pre>{
-  "tools": [
-    "upload_video_from_url",
-    "search_channel_videos",
-    "get_video_summary_and_mcqs",
-    "generate_signed_playback_url"
-  ],
-  "embed_sdk": "&lt;acn-video-player video-id=\"vid_8842\" token=\"hmac...\"&gt;&lt;/acn-video-player&gt;"
-}</pre>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+            <button class="action-btn" onclick="callMcpTool('upload_video_from_url', {source_url:'http://localhost:8080/sample-3.mp4', title:'sample-3.mp4 Cloud Stream'})">1. upload_video_from_url</button>
+            <button class="action-btn" onclick="callMcpTool('search_channel_videos', {query:'CMAF single decode and ONNX chat', limit:3})">2. search_channel_videos</button>
+            <button class="action-btn" onclick="callMcpTool('get_video_summary_and_mcqs', {video_id:'vid_8842'})">3. get_video_summary_and_mcqs</button>
+            <button class="action-btn" onclick="callMcpTool('generate_signed_playback_url', {video_id:'vid_8842', allowed_origin:'http://localhost:8080'})">4. generate_signed_playback_url</button>
+          </div>
+          <pre id="mcp-live-output">Click any MCP tool button above to execute a live JSON-RPC call against http://localhost:8084/mcp/call ...</pre>
         </div>
       </div>
     </section>
@@ -409,10 +415,23 @@
 
   <script>
     const CAPTIONS = {
-      en: '[00:42] "FFmpeg decodes the source video once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."',
-      hi: '[00:42] "FFmpeg स्रोत वीडियो को एक बार डिकोड करता है और 360p, 720p और 1080p को 2-सेकंड CMAF .m4s सेगमेंट में पैक करता है।"',
-      es: '[00:42] "FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF .m4s de 2 segundos."'
+      en: '[00:02] "FFmpeg decodes sample-3.mp4 once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."',
+      hi: '[00:02] "FFmpeg स्रोत वीडियो को एक बार डिकोड करता है और 360p, 720p और 1080p को 2-सेकंड CMAF .m4s सेगमेंट में पैक करता है।"',
+      es: '[00:02] "FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF .m4s de 2 segundos."'
     };
+
+    const mainVideo = document.getElementById('main-video');
+    if (mainVideo) {
+      mainVideo.addEventListener('timeupdate', () => {
+        const cur = Math.floor(mainVideo.currentTime || 0);
+        const dur = Math.floor(mainVideo.duration || 0);
+        const mm = String(Math.floor(cur / 60)).padStart(2, '0');
+        const ss = String(cur % 60).padStart(2, '0');
+        const dmm = String(Math.floor(dur / 60)).padStart(2, '0');
+        const dss = String(dur % 60).padStart(2, '0');
+        document.getElementById('time-display').textContent = `/sample-3.mp4 (${mm}:${ss} / ${dmm}:${dss})`;
+      });
+    }
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
@@ -425,13 +444,21 @@
       const q = document.getElementById('sel-quality').value;
       const s = document.getElementById('sel-speed').value;
       const l = document.getElementById('sel-lang').value;
+      if (mainVideo) {
+        mainVideo.playbackRate = parseFloat(s);
+      }
       document.getElementById('stream-status-pill').textContent =
-        `CMAF STREAM READY • ${q} (.m4s) • ${s}x • AUDIO: ${l.toUpperCase()}`;
+        `PLAYING sample-3.mp4 • ${q} CMAF • ${s}x • AUDIO: ${l.toUpperCase()}`;
       document.getElementById('caption-box').textContent = CAPTIONS[l] || CAPTIONS.en;
     }
 
     function seekToTimestamp(sec, label) {
-      document.getElementById('time-display').textContent = `${label} / 06:00`;
+      if (mainVideo) {
+        const target = Math.min(sec, Math.max(0, (mainVideo.duration || 10) - 1));
+        mainVideo.currentTime = target;
+        mainVideo.play().catch(() => {});
+      }
+      document.getElementById('time-display').textContent = `/sample-3.mp4 (Seek -> ${label})`;
     }
 
     async function loadInitialArtifacts() {
@@ -523,6 +550,21 @@
       });
       const data = await res.json();
       document.getElementById('upload-output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function callMcpTool(name, toolArgs) {
+      try {
+        const res = await fetch('http://localhost:8084/mcp/call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, arguments: toolArgs })
+        });
+        const data = await res.json();
+        document.getElementById('mcp-live-output').textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById('mcp-live-output').textContent =
+          'Ensure MCP Server (:8084) is running: node --experimental-strip-types services/mcp-server/src/index.ts\n' + e;
+      }
     }
 
     // Yjs CRDT Interactive Canvas Whiteboard
