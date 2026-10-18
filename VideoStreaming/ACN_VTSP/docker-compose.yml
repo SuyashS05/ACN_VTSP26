@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: acn-vtsp
 
 services:
@@ -47,7 +45,7 @@ services:
   # 3. QDRANT VECTOR DB — Transcript RAG Chunks, CLIP Products, Feed Vectors
   # =========================================================================
   qdrant:
-    image: qdrant/qdrant:v1.11.3
+    image: qdrant/qdrant:latest
     container_name: acn-qdrant
     restart: unless-stopped
     ports:
@@ -104,37 +102,19 @@ services:
       KAFKA_NUM_PARTITIONS: 4
 
   # =========================================================================
-  # 6. MINIO (Local Cloudflare R2 Drop-In S3 Storage: Raw & Processed Media)
+  # 6. SEAWEEDFS S3 GATEWAY (Local Cloudflare R2 Drop-In Object Storage)
+  #    100% open-source Docker Hub image (no MinIO 401 registry auth block!)
   # =========================================================================
-  minio:
-    image: minio/minio:latest
-    container_name: acn-r2-minio
+  r2-storage:
+    image: chrislusf/seaweedfs:latest
+    container_name: acn-r2-storage
     restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-acn_r2_access_key}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-acn_r2_secret_key}
+    command: "server -s3 -s3.port=9000 -filer -dir=/data"
     ports:
-      - "9002:9000" # S3 API Endpoint (http://localhost:9002)
-      - "9001:9001" # MinIO Web Console (http://localhost:9001)
+      - "9002:9000" # S3-Compatible API Endpoint (http://localhost:9002)
+      - "9001:8888" # Web Filer & Bucket Browser (http://localhost:9001)
     volumes:
-      - minio_data:/data
-
-  minio-init:
-    image: minio/mc:latest
-    container_name: acn-r2-minio-init
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 3;
-      mc alias set localr2 http://minio:9000 $${S3_ACCESS_KEY:-acn_r2_access_key} $${S3_SECRET_KEY:-acn_r2_secret_key};
-      mc mb --ignore-existing localr2/acn-vtsp-raw;
-      mc mb --ignore-existing localr2/acn-vtsp-processed-media;
-      mc anonymous set download localr2/acn-vtsp-processed-media;
-      echo '✅ Cloudflare R2 Local Buckets (acn-vtsp-raw & acn-vtsp-processed-media) Initialized!';
-      exit 0;
-      "
+      - s3_data:/data
 
   # =========================================================================
   # 7. LIVEKIT SFU — Sub-300ms Multi-Party WebRTC Video Calls & Co-Hosting
@@ -170,5 +150,4 @@ volumes:
   redis_data:
   qdrant_data:
   clickhouse_data:
-  minio_data:
-
+  s3_data:

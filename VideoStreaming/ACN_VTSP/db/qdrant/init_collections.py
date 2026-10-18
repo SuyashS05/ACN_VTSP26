@@ -47,6 +47,9 @@ def qdrant_request(method: str, path: str, payload: dict | None = None) -> dict:
 
 
 def main() -> None:
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     print(f"🔗 Connecting to Qdrant Vector DB at {QDRANT_URL} ...")
     for name, spec in COLLECTIONS.items():
         res = qdrant_request("PUT", f"/collections/{name}", {"vectors": spec["vectors"]})

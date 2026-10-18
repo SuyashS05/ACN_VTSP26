@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACN-VTSP • Automated Cloud-Native Video Transcoding & Streaming Platform</title>
+  <style>
+    :root {
+      --bg: #080c14;
+      --panel: #0f172a;
+      --panel-alt: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --cyan: #38bdf8;
+      --emerald: #34d399;
+      --purple: #c084fc;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+    }
+    header {
+      background: rgba(15, 23, 42, 0.92);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 10px var(--emerald); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab-btn {
+      background: var(--panel-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--cyan);
+      color: #080c14;
+      border-color: var(--cyan);
+    }
+    main { max-width: 1360px; margin: 0 auto; padding: 20px 24px 48px; }
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 980px) { .grid-3 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .card-title {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .player-stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(circle at 30% 30%, #1e293b, #090d16);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+    }
+    .shoppable-overlay {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: rgba(8, 12, 20, 0.92);
+      border: 1.5px solid var(--cyan);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transition: transform 0.2s;
+    }
+    .shoppable-overlay:hover { transform: scale(1.04); }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: Consolas, monospace;
+      font-weight: 600;
+    }
+    .badge-cyan { background: rgba(56, 189, 248, 0.15); color: var(--cyan); border: 1px solid rgba(56,189,248,0.4); }
+    .badge-green { background: rgba(52, 211, 153, 0.15); color: var(--emerald); border: 1px solid rgba(52,211,153,0.4); }
+    .badge-purple { background: rgba(192, 132, 252, 0.15); color: var(--purple); border: 1px solid rgba(192,132,252,0.4); }
+    .badge-rose { background: rgba(251, 113, 133, 0.15); color: var(--rose); border: 1px solid rgba(251,113,133,0.4); }
+    .controls-bar {
+      background: rgba(8, 12, 20, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+    select, input, button.action-btn {
+      background: var(--panel-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+    }
+    button.action-btn {
+      background: var(--cyan);
+      color: #080c14;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    .mcq-option {
+      width: 100%;
+      text-align: left;
+      background: #090d16;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-top: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+    }
+    .mcq-option.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--emerald); color: #a7f3d0; }
+    .mcq-option.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--rose); color: #fecdd3; }
+    pre {
+      background: #060911;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11.5px;
+      overflow-x: auto;
+      color: #cbd5e1;
+      margin: 8px 0 0;
+    }
+    canvas#whiteboard {
+      width: 100%;
+      height: 290px;
+      background: #090d16;
+      border: 1px solid var(--purple);
+      border-radius: 10px;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <div style="font-weight:700; font-size:16px;">ACN-VTSP • Cloud-Native Video Transcoding &amp; Streaming Platform</div>
+        <div style="font-size:11.5px; color:var(--muted);">Zero-Egress R2 • KEDA Spot CMAF (.m4s) • Spot GPU AI • Sub-300ms WebRTC &amp; Yjs • &lt;5ms ONNX Chat • Headless MCP</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('watch', this)">1. 16:9 Watch, RAG &amp; Shoppable</button>
+      <button class="tab-btn" onclick="switchTab('shorts', this)">2. 9:16 Shorts + Pre-Fetch</button>
+      <button class="tab-btn" onclick="switchTab('live', this)">3. Live WebRTC, Yjs Board &amp; ONNX Chat</button>
+      <button class="tab-btn" onclick="switchTab('studio', this)">4. Creator Studio, Upload &amp; MCP</button>
+      <button class="tab-btn" onclick="switchTab('arch', this)">5. Interactive 6-Stage Flow (flow2.html)</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ==================== TAB 1: 16:9 WATCH, RAG Q&A, MCQ & SHOPPABLE ==================== -->
+    <section id="tab-watch" class="tab-view active">
+      <div class="grid-3">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card">
+            <div class="player-stage">
+              <a id="shop-popup" class="shoppable-overlay" href="https://store.example.com/item/991" target="_blank">
+                🛒 <strong>Wireless Noise-Canceling Headphones</strong>
+                <span style="color:var(--emerald); font-weight:700; margin-left:6px;">$129</span>
+                <div style="font-size:11px; color:var(--muted); margin-top:2px;">YOLOv11 + CLIP Match (Cosine: 0.93) • Click to Buy</div>
+              </a>
+
+              <div style="margin:auto; text-align:center; max-width:560px;">
+                <span id="stream-status-pill" class="badge badge-green">CMAF STREAM READY • 720p (.m4s) • 1.0x • AUDIO: EN</span>
+                <h2 style="margin:10px 0 6px; font-size:20px;">Cloud-Native CMAF Transcoding &amp; Zero-Egress Architecture Deep Dive</h2>
+                <p id="caption-box" style="margin:0; font-size:13.5px; color:#e2e8f0; background:rgba(0,0,0,0.65); padding:6px 12px; border-radius:6px;">
+                  [00:42] "FFmpeg decodes the source video once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."
+                </p>
+              </div>
+
+              <div class="controls-bar">
+                <div>
+                  <span style="color:var(--muted);">Timestamp:</span>
+                  <strong id="time-display" style="font-family:monospace; color:var(--cyan);">00:42 / 06:00</strong>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                  <label>ABR Quality:
+                    <select id="sel-quality" onchange="updatePlayerConfig()">
+                      <option value="360p">360p CMAF (800 kbps)</option>
+                      <option value="720p" selected>720p HD CMAF (2.5 Mbps)</option>
+                      <option value="1080p">1080p Full HD (5.0 Mbps)</option>
+                      <option value="1080p-AV1">1080p AV1 Tier (-45% BW)</option>
+                    </select>
+                  </label>
+                  <label>Speed:
+                    <select id="sel-speed" onchange="updatePlayerConfig()">
+                      <option value="0.25">0.25x</option>
+                      <option value="0.5">0.5x</option>
+                      <option value="1.0" selected>1.0x</option>
+                      <option value="1.25">1.25x</option>
+                      <option value="1.5">1.5x</option>
+                      <option value="2.0">2.0x</option>
+                    </select>
+                  </label>
+                  <label>#EXT-X-MEDIA Audio &amp; VTT:
+                    <select id="sel-lang" onchange="updatePlayerConfig()">
+                      <option value="en">English (Faster-Whisper)</option>
+                      <option value="hi">Hindi (NLLB-200 + Kokoro TTS)</option>
+                      <option value="es">Spanish (NLLB-200 + Kokoro TTS)</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">
+              <span>Generated HLS Master Manifest (<code>out_cmaf/videos/vid_8842/master.m3u8</code>)</span>
+              <span class="badge badge-cyan">CMAF .m4s + #EXT-X-MEDIA</span>
+            </h3>
+            <pre id="manifest-preview">Loading real master.m3u8 from ./out_cmaf/videos/vid_8842/master.m3u8 ...</pre>
+          </div>
+        </div>
+
+        <!-- Right Sidebar: Timestamped RAG Q&A + Interactive MCQ Quiz -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card">
+            <h3 class="card-title">
+              <span>Timestamped Video RAG Q&amp;A</span>
+              <span class="badge badge-cyan">Qdrant 60s Chunks</span>
+            </h3>
+            <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
+              Query <code>POST /api/v1/videos/vid_8842/ask</code> for timestamp-cited answers:
+            </p>
+            <div style="display:flex; gap:8px;">
+              <input id="rag-input" style="flex:1;" value="How does CMAF and ONNX chat moderation work?" />
+              <button class="action-btn" onclick="askRagQuestion()">Ask AI</button>
+            </div>
+            <div id="rag-response" style="margin-top:12px; padding:12px; background:#090d16; border:1px solid var(--border); border-radius:8px; font-size:12.5px;">
+              Click <strong>Ask AI</strong> to query the video transcript embeddings.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">
+              <span>Auto-Generated Video MCQ Quiz</span>
+              <span class="badge badge-purple">LLM Structured JSON</span>
+            </h3>
+            <div id="mcq-container" style="font-size:12.5px;">Loading MCQs from <code>/api/v1/videos/vid_8842/mcqs</code>...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: 9:16 VERTICAL SHORTS & PRE-FETCH ==================== -->
+    <section id="tab-shorts" class="tab-view">
+      <div class="grid-3">
+        <div class="card" style="display:flex; justify-content:center; align-items:center; padding:24px;">
+          <div style="width:320px; aspect-ratio:9/16; background:linear-gradient(160deg,#1e1b4b,#090d16); border:2px solid var(--cyan); border-radius:24px; padding:18px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-green">9:16 VERTICAL SHORT</span>
+              <span id="short-counter" class="badge badge-cyan">#1 / 3</span>
+            </div>
+            <div style="text-align:center;">
+              <h3 id="short-title" style="font-size:17px;">Zero-Egress CMAF Streaming &amp; KEDA Spot Architecture</h3>
+              <p style="font-size:12px; color:var(--muted);">First-Frame Startup: <strong>140ms</strong> (Pre-fetched init.mp4 + seg_000.m4s)</p>
+            </div>
+            <button class="action-btn" style="width:100%; padding:10px;" onclick="nextShort()">Swipe to Next Short ▼ (Triggers Pre-Fetch)</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">
+            <span>Zero-Latency Segment Pre-Fetch Engine</span>
+            <span class="badge badge-green">&lt; 300ms TTFF</span>
+          </h3>
+          <p style="font-size:12.5px; color:var(--muted);">
+            While watching Short #1, the client pre-fetches <code>master.m3u8</code> + <code>init.mp4</code> + <code>seg_000.m4s</code> (<code>~400KB</code>) for the <strong>next 2 videos</strong> in the Redis ZSET timeline:
+          </p>
+          <pre id="prefetch-log">[PREFETCH CACHE WARMED]
+• Next +1 (vid_9104): init.mp4 (4KB) + seg_000.m4s (380KB) -> HTTP/3 206 Partial Content [HIT]
+• Next +2 (vid_7731): init.mp4 (4KB) + seg_000.m4s (365KB) -> HTTP/3 206 Partial Content [HIT]</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: LIVE WEBRTC, YJS WHITEBOARD & ONNX CHAT ==================== -->
+    <section id="tab-live" class="tab-view">
+      <div class="grid-3">
+        <div class="card">
+          <h3 class="card-title">
+            <span>Real-Time Collaborative Whiteboard (Yjs CRDT Sync &lt; 5 kbps)</span>
+            <span id="crdt-counter" class="badge badge-purple">CRDT Deltas: 0 strokes (0.0 KB)</span>
+          </h3>
+          <p style="font-size:12px; color:var(--muted); margin:0 0 8px;">
+            Draw directly on the canvas below — syncs binary <code>Uint8Array</code> vector coordinates instead of heavy screen-share video pixels:
+          </p>
+          <canvas id="whiteboard" width="760" height="290"></canvas>
+          <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:var(--emerald);">● LiveKit WebRTC SFU (&lt;300ms Co-Hosting) + MediaMTX LL-HLS (0.5s parts)</span>
+            <button class="action-btn" onclick="clearBoard()">Clear Whiteboard</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">
+            <span>Sub-5ms NLP Live Chat Moderation</span>
+            <span class="badge badge-green">Go Trie (0.1ms) + Int8 ONNX (4ms)</span>
+          </h3>
+          <p style="font-size:12px; color:var(--muted);">
+            Test clean vs. toxic messages against <code>POST /api/v1/chat/moderate</code>:
+          </p>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <input id="chat-input" style="flex:1;" placeholder="Type a chat message (try 'great stream' or 'you idiot')" value="This CMAF architecture is awesome!" />
+            <button class="action-btn" onclick="sendChatMessage()">Send</button>
+          </div>
+          <div style="display:flex; gap:6px; margin-bottom:10px;">
+            <button class="tab-btn" style="font-size:11px; padding:4px 8px;" onclick="testPresetChat('Awesome low-latency WebRTC stream!')">Test Clean</button>
+            <button class="tab-btn" style="font-size:11px; padding:4px 8px;" onclick="testPresetChat('You are a stupid idiot')">Test Toxic (ONNX)</button>
+            <button class="tab-btn" style="font-size:11px; padding:4px 8px;" onclick="testPresetChat('Click free-crypto-airdrop scamlink')">Test Phishing (Trie 0.1ms)</button>
+          </div>
+          <pre id="chat-mod-output">Send a message above to inspect real-time Trie + ONNX Detoxify moderation telemetry.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: CREATOR STUDIO, MULTIPART UPLOAD & MCP ==================== -->
+    <section id="tab-studio" class="tab-view">
+      <div class="grid-3">
+        <div class="card">
+          <h3 class="card-title">
+            <span>Direct-to-R2 10MB Chunked S3 Multipart Upload Simulator</span>
+            <span class="badge badge-cyan">POST /api/v1/uploads/init</span>
+          </h3>
+          <p style="font-size:12.5px; color:var(--muted);">
+            Generates Presigned S3 URLs so clients upload 10MB chunks directly to <code>acn-vtsp-raw</code>, bypassing backend RAM:
+          </p>
+          <button class="action-btn" onclick="simulateMultipartUpload()">Simulate 50MB Video Upload &amp; Presigned URL Generation</button>
+          <pre id="upload-output">Click button to initialize a 5-part 10MB Direct S3 Multipart Upload.</pre>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">
+            <span>Headless Model Context Protocol (MCP) Server Tools</span>
+            <span class="badge badge-purple">SSE / Stdio</span>
+          </h3>
+          <p style="font-size:12px; color:var(--muted);">
+             Exposed tools for Claude / Cursor / External AI Workflows:
+          </p>
+          <pre>{
+  "tools": [
+    "upload_video_from_url",
+    "search_channel_videos",
+    "get_video_summary_and_mcqs",
+    "generate_signed_playback_url"
+  ],
+  "embed_sdk": "&lt;acn-video-player video-id=\"vid_8842\" token=\"hmac...\"&gt;&lt;/acn-video-player&gt;"
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: INTERACTIVE 6-STAGE ARCHITECTURE FLOW ==================== -->
+    <section id="tab-arch" class="tab-view">
+      <div class="card" style="padding:0; overflow:hidden;">
+        <iframe src="/flow2.html" style="width:100%; height:640px; border:none;"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const CAPTIONS = {
+      en: '[00:42] "FFmpeg decodes the source video once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."',
+      hi: '[00:42] "FFmpeg स्रोत वीडियो को एक बार डिकोड करता है और 360p, 720p और 1080p को 2-सेकंड CMAF .m4s सेगमेंट में पैक करता है।"',
+      es: '[00:42] "FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF .m4s de 2 segundos."'
+    };
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function updatePlayerConfig() {
+      const q = document.getElementById('sel-quality').value;
+      const s = document.getElementById('sel-speed').value;
+      const l = document.getElementById('sel-lang').value;
+      document.getElementById('stream-status-pill').textContent =
+        `CMAF STREAM READY • ${q} (.m4s) • ${s}x • AUDIO: ${l.toUpperCase()}`;
+      document.getElementById('caption-box').textContent = CAPTIONS[l] || CAPTIONS.en;
+    }
+
+    function seekToTimestamp(sec, label) {
+      document.getElementById('time-display').textContent = `${label} / 06:00`;
+    }
+
+    async function loadInitialArtifacts() {
+      try {
+        const m3u8Res = await fetch('/out_cmaf/videos/vid_8842/master.m3u8');
+        if (m3u8Res.ok) {
+          document.getElementById('manifest-preview').textContent = await m3u8Res.text();
+        }
+        const mcqRes = await fetch('/api/v1/videos/vid_8842/mcqs');
+        if (mcqRes.ok) {
+          const data = await mcqRes.json();
+          const container = document.getElementById('mcq-container');
+          container.innerHTML = (data.mcqs || []).map((m, qIdx) => `
+            <div style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #1e293b;">
+              <div style="font-weight:600; margin-bottom:4px;">
+                <span class="badge badge-purple">${m.difficulty}</span> ${m.question_text}
+              </div>
+              ${m.options.map((opt, oIdx) => `
+                <button class="mcq-option" onclick="checkMcq(this, ${oIdx}, ${m.correct_option_index}, '${m.explanation.replace(/'/g, "\\'")}', ${m.explanation_timestamp_sec})">
+                  ${oIdx + 1}. ${opt}
+                </button>
+              `).join('')}
+            </div>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+
+    function checkMcq(btn, chosen, correct, explanation, tsSec) {
+      btn.classList.add(chosen === correct ? 'correct' : 'wrong');
+      const mins = String(Math.floor(tsSec / 60)).padStart(2, '0');
+      const secs = String(Math.floor(tsSec % 60)).padStart(2, '0');
+      seekToTimestamp(tsSec, `${mins}:${secs}`);
+    }
+
+    async function askRagQuestion() {
+      const question = document.getElementById('rag-input').value;
+      const res = await fetch('/api/v1/videos/vid_8842/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+      const data = await res.json();
+      document.getElementById('rag-response').innerHTML = `
+        <div style="color:#e2e8f0; margin-bottom:8px;">${data.answer}</div>
+        <div style="display:flex; gap:6px;">
+          ${(data.citations || []).map(c => `
+            <button class="badge badge-cyan" style="cursor:pointer;" onclick="seekToTimestamp(${c.timestamp_sec}, '${c.label}')">
+              Jump to [${c.label}] (Score: ${c.score})
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    const SHORTS = [
+      { id: 'vid_8842', title: 'Zero-Egress CMAF Streaming & KEDA Spot Architecture' },
+      { id: 'vid_9104', title: 'Sub-5ms Go WebSocket Chat Moderation with Int8 ONNX' },
+      { id: 'vid_7731', title: 'YOLOv11 + CLIP Shoppable Video Pop-Ups in 60 Seconds' }
+    ];
+    let shortIdx = 0;
+    function nextShort() {
+      shortIdx = (shortIdx + 1) % SHORTS.length;
+      document.getElementById('short-counter').textContent = `#${shortIdx + 1} / ${SHORTS.length}`;
+      document.getElementById('short-title').textContent = SHORTS[shortIdx].title;
+    }
+
+    async function sendChatMessage() {
+      const message = document.getElementById('chat-input').value;
+      const res = await fetch('/api/v1/chat/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: 'live_room_01', message })
+      });
+      const data = await res.json();
+      document.getElementById('chat-mod-output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    function testPresetChat(text) {
+      document.getElementById('chat-input').value = text;
+      sendChatMessage();
+    }
+
+    async function simulateMultipartUpload() {
+      const res = await fetch('/api/v1/uploads/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Demo 4K Masterclass.mp4', file_size_bytes: 52428800 })
+      });
+      const data = await res.json();
+      document.getElementById('upload-output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Yjs CRDT Interactive Canvas Whiteboard
+    const canvas = document.getElementById('whiteboard');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let strokeCount = 0;
+    let bytesSynced = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      ctx.beginPath();
+      const r = canvas.getBoundingClientRect();
+      ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const r = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      bytesSynced += 12;
+      document.getElementById('crdt-counter').textContent =
+        `CRDT Deltas: ${strokeCount + 1} strokes (${(bytesSynced / 1024).toFixed(2)} KB synced @ <5 kbps)`;
+    });
+    window.addEventListener('mouseup', () => {
+      if (drawing) {
+        drawing = false;
+        strokeCount++;
+      }
+    });
+    function clearBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      strokeCount = 0;
+      bytesSynced = 0;
+      document.getElementById('crdt-counter').textContent = 'CRDT Deltas: 0 strokes (0.0 KB)';
+    }
+
+    loadInitialArtifacts();
+    askRagQuestion();
+  </script>
+</body>
+</html>
+
