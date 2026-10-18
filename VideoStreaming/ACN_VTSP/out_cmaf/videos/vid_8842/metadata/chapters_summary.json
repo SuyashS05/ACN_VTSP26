@@ -1,0 +1,62 @@
+{
+  "video_id": "vid_8842",
+  "executive_summary": "Comprehensive architectural walkthrough of zero-egress CMAF video streaming, KEDA Spot autoscaling, sub-5ms ONNX live chat moderation, and Shoppable CV.",
+  "chapters": [
+    {
+      "timestamp_sec": 0.0,
+      "label": "00:00",
+      "title": "Direct 10MB S3 Multipart Ingest"
+    },
+    {
+      "timestamp_sec": 42.0,
+      "label": "00:42",
+      "title": "Single-Decode FFmpeg CMAF (.m4s) Ladder"
+    },
+    {
+      "timestamp_sec": 185.0,
+      "label": "03:05",
+      "title": "Sub-5ms Go Trie + Int8 ONNX Chat Moderation"
+    }
+  ],
+  "mcqs": [
+    {
+      "difficulty": "EASY",
+      "question_text": "What chunk duration and container format does the CMAF transcoding pipeline output?",
+      "options": [
+        "10-second AVI files",
+        "2-second fragmented MP4 (.m4s) CMAF segments",
+        "60-second uncompressed WAV files",
+        "5-minute Flash FLV files"
+      ],
+      "correct_option_index": 1,
+      "explanation": "FFmpeg encodes 2-second keyframe-aligned (-g 48) fragmented MP4 (.m4s) CMAF chunks shared by HLS and DASH.",
+      "explanation_timestamp_sec": 42.0
+    },
+    {
+      "difficulty": "MEDIUM",
+      "question_text": "How does the platform achieve zero bandwidth egress cost from origin storage to CDN?",
+      "options": [
+        "By storing all raw and processed CMAF chunks in Cloudflare R2 paired with Cloudflare CDN",
+        "By compressing videos to 144p only",
+        "By blocking mobile viewers",
+        "By disabling HTTPS"
+      ],
+      "correct_option_index": 0,
+      "explanation": "Cloudflare R2 charges $0.00/GB egress to Cloudflare CDN compared to AWS S3's $0.09/GB.",
+      "explanation_timestamp_sec": 95.0
+    },
+    {
+      "difficulty": "HARD",
+      "question_text": "Why does real-time whiteboard sharing consume less than 5 kbps during live sessions?",
+      "options": [
+        "It streams 4K 60fps screen-share video over RTMP",
+        "It syncs vector stroke coordinates via Yjs Conflict-Free Replicated Data Types (CRDTs) as Uint8Array deltas",
+        "It sends JPEG screenshots every second",
+        "It requires viewers to refresh the browser manually"
+      ],
+      "correct_option_index": 1,
+      "explanation": "Yjs CRDT syncs only binary vector stroke coordinates (<5 kbps) rather than heavy video pixels.",
+      "explanation_timestamp_sec": 150.0
+    }
+  ]
+}

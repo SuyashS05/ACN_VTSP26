@@ -1,0 +1,23 @@
+###############################################
+# MediaMTX Low-Latency HLS (LL-HLS) Config
+# Converts RTMP / WHIP Live Streams -> LL-HLS (0.5s parts)
+###############################################
+logLevel: info
+rtmp: yes
+rtmpAddress: :1935
+
+webrtc: yes
+webrtcAddress: :8889
+
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigin: '*'
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 2s
+hlsPartDuration: 500ms
+hlsSegmentMaxSize: 50M
+
+paths:
+  all_others:
+

@@ -6,6 +6,7 @@
 
 **Zero-Egress Cloud-Native Streaming • KEDA Spot FFmpeg CMAF • Parallel Spot GPU AI Enrichment • Sub-300ms WebRTC & Yjs Whiteboard • <5ms ONNX Chat Moderation • Headless MCP Server**
 
+[![Problem, Solution & SDLC Roadmap](https://img.shields.io/badge/Problem_&_SDLC_Roadmap-PROBLEM__SOLUTION__AND__ROADMAP.md-ec4899?style=for-the-badge)](./PROBLEM_SOLUTION_AND_ROADMAP.md)
 [![Interactive Flow Visualizer](https://img.shields.io/badge/Interactive_Visualizer-flow2.html-3186ff?style=for-the-badge)](./flow2.html)
 [![ASCII Architecture](https://img.shields.io/badge/Blueprint-ARCH.txt-10b981?style=for-the-badge)](./ARCH.txt)
 [![NLP Chat Flow](https://img.shields.io/badge/Chat_Moderation-flow.txt-f59e0b?style=for-the-badge)](./flow.txt)

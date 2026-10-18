@@ -1,0 +1,174 @@
+version: "3.9"
+
+name: acn-vtsp
+
+services:
+  # =========================================================================
+  # 1. POSTGRESQL 16 — Core Relational State (Users, Videos, MCQs, API Keys)
+  # =========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: acn-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-acn_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-acn_secret_password}
+      POSTGRES_DB: ${POSTGRES_DB:-acn_vtsp}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/postgres/001_init_schema.sql:/docker-entrypoint-initdb.d/001_init_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acn_admin} -d ${POSTGRES_DB:-acn_vtsp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # =========================================================================
+  # 2. REDIS 7.4 — Live Chat Pub/Sub, Sub-20ms Feed ZSET, Yjs CRDT, BullMQ
+  # =========================================================================
+  redis:
+    image: redis:7.4-alpine
+    container_name: acn-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # =========================================================================
+  # 3. QDRANT VECTOR DB — Transcript RAG Chunks, CLIP Products, Feed Vectors
+  # =========================================================================
+  qdrant:
+    image: qdrant/qdrant:v1.11.3
+    container_name: acn-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # REST & Web UI (http://localhost:6333/dashboard)
+      - "6334:6334" # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  # =========================================================================
+  # 4. CLICKHOUSE — Real-Time Watch Telemetry, QoS Buffering & Feed Signals
+  # =========================================================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    container_name: acn-clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-acn_telemetry}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-acn_ch_user}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-acn_ch_password}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123" # HTTP API
+      - "9000:9000" # Native TCP
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./db/clickhouse/001_telemetry.sql:/docker-entrypoint-initdb.d/001_telemetry.sql:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  # =========================================================================
+  # 5. APACHE KAFKA (KRaft Mode) — Event Bus for Transcoding & GPU AI DAG
+  # =========================================================================
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: acn-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 4
+
+  # =========================================================================
+  # 6. MINIO (Local Cloudflare R2 Drop-In S3 Storage: Raw & Processed Media)
+  # =========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: acn-r2-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-acn_r2_access_key}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-acn_r2_secret_key}
+    ports:
+      - "9002:9000" # S3 API Endpoint (http://localhost:9002)
+      - "9001:9001" # MinIO Web Console (http://localhost:9001)
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: acn-r2-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc alias set localr2 http://minio:9000 $${S3_ACCESS_KEY:-acn_r2_access_key} $${S3_SECRET_KEY:-acn_r2_secret_key};
+      mc mb --ignore-existing localr2/acn-vtsp-raw;
+      mc mb --ignore-existing localr2/acn-vtsp-processed-media;
+      mc anonymous set download localr2/acn-vtsp-processed-media;
+      echo '✅ Cloudflare R2 Local Buckets (acn-vtsp-raw & acn-vtsp-processed-media) Initialized!';
+      exit 0;
+      "
+
+  # =========================================================================
+  # 7. LIVEKIT SFU — Sub-300ms Multi-Party WebRTC Video Calls & Co-Hosting
+  # =========================================================================
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: acn-livekit-sfu
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml --dev
+    ports:
+      - "7880:7880" # WebRTC Signaling HTTP/WS
+      - "7881:7881" # WebRTC TCP
+      - "7882:7882/udp" # WebRTC UDP Media Port
+    volumes:
+      - ./infra/livekit/livekit.yaml:/etc/livekit.yaml:ro
+
+  # =========================================================================
+  # 8. MEDIAMTX — WHIP / RTMP Ingest -> Low-Latency HLS (LL-HLS 0.5s Parts)
+  # =========================================================================
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: acn-mediamtx-llhls
+    restart: unless-stopped
+    ports:
+      - "1935:1935" # RTMP Ingest (OBS / LiveKit Egress)
+      - "8888:8888" # LL-HLS Playback Server (http://localhost:8888/{stream}/index.m3u8)
+      - "8889:8889" # WebRTC WHIP / WHEP
+    volumes:
+      - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  clickhouse_data:
+  minio_data:
+

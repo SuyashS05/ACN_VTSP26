@@ -1,0 +1,40 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: cmaf-transcoder-spot-scaler
+  namespace: acn-media-workers
+spec:
+  scaleTargetRef:
+    name: transcoder-cmaf-worker
+  pollingInterval: 5
+  cooldownPeriod: 60
+  minReplicaCount: 0          # Scales completely to ZERO when idle (saves 70-80% compute cost)
+  maxReplicaCount: 50         # Burst scales up to 50 Spot CPU pods during peak upload spikes
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka-cluster.acn-infra.svc:9092
+        consumerGroup: cmaf-transcoder-group
+        topic: video.ingest.object_created
+        lagThreshold: "2"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: av1-tiered-transcoder-spot-scaler
+  namespace: acn-media-workers
+spec:
+  scaleTargetRef:
+    name: transcoder-av1-worker
+  pollingInterval: 15
+  cooldownPeriod: 120
+  minReplicaCount: 0
+  maxReplicaCount: 20
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka-cluster.acn-infra.svc:9092
+        consumerGroup: av1-tiered-group
+        topic: video.transcode.av1_upgrade_requested
+        lagThreshold: "5"
+

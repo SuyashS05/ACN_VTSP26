@@ -1,0 +1,14 @@
+port: 7880
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: false
+keys:
+  devkey: secret
+logging:
+  level: info
+room:
+  auto_create: true
+  max_participants: 50
+  empty_timeout: 300
+

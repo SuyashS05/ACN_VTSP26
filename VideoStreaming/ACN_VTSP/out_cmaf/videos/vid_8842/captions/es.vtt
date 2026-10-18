@@ -1,0 +1,12 @@
+WEBVTT
+Kind: captions
+Language: es
+
+00:00:01.120 --> 00:00:06.400
+Bienvenido a nuestra plataforma nativa en la nube de transcodificación y streaming de video.
+
+00:00:40.000 --> 00:00:48.500
+FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF .m4s de 2 segundos.
+
+00:03:02.000 --> 00:03:10.000
+Nuestra pasarela WebSocket en Go ejecuta un filtro Trie en 0.1ms y ONNX Detoxify Int8 en 4ms.
