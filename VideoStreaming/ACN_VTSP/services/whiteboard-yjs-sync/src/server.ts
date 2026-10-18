@@ -74,6 +74,14 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({ service: "acn-vtsp-whiteboard-yjs-sync", status: "healthy" }));
 });
 
+server.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`✅ ACN-VTSP Yjs CRDT Whiteboard Server is ALREADY running in the background on http://localhost:${PORT}`);
+    process.exit(0);
+  }
+  throw err;
+});
+
 server.listen(PORT, () => {
   console.log(`🎨 ACN-VTSP Yjs CRDT Whiteboard Sync Server (<5 kbps) listening on http://localhost:${PORT}`);
   console.log(`   • Inspect Room CRDT Snapshot : http://localhost:${PORT}/api/v1/whiteboard/snapshot/live_room_01`);

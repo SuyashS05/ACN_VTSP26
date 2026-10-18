@@ -148,15 +148,19 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json(200, {"service": "acn-vtsp-unified-server", "status": "healthy"})
             return
 
-        # Serve sample-3.mp4 (and any .mp4 / .m4s / .vtt) with HTTP 206 Byte-Range support for Chrome
+        # Serve sample-3.mp4 (and any .mp4 / .m4s / .vtt / .m3u8) with HTTP 206 Byte-Range support for Chrome
         if path.endswith(".mp4") or path.endswith(".m4s") or path.endswith(".vtt") or path.endswith(".m3u8"):
             rel = path.lstrip("/")
             target = (ROOT / rel).resolve()
+            if not target.exists() and target.name.startswith("init") and (target.parent.parent / target.name).exists():
+                target = target.parent.parent / target.name
             if not target.exists() and path.endswith(".mp4"):
                 target = ROOT / "sample-3.mp4"
             if target.exists() and target.is_file():
                 mime = "video/mp4"
-                if path.endswith(".vtt"):
+                if path.endswith(".m4s"):
+                    mime = "video/iso.segment"
+                elif path.endswith(".vtt"):
                     mime = "text/vtt; charset=utf-8"
                 elif path.endswith(".m3u8"):
                     mime = "application/vnd.apple.mpegurl"

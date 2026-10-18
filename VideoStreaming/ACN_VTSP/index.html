@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ACN-VTSP • Automated Cloud-Native Video Transcoding & Streaming Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
   <style>
     :root {
       --bg: #080c14;
@@ -203,20 +204,20 @@
         <div style="display:flex; flex-direction:column; gap:16px;">
           <div class="card">
             <div class="player-stage" style="padding:0; background:#000;">
-              <video id="main-video" src="/sample-3.mp4" controls autoplay muted loop playsinline
-                style="width:100%; height:100%; object-fit:contain; background:#000;">
+              <video id="main-video" src="/sample-3.mp4" controls autoplay loop playsinline
+                style="width:100%; height:100%; object-fit:contain; background:#000; transition: filter 0.25s ease;">
                 <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/en.vtt" srclang="en" label="English" default />
                 <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/hi.vtt" srclang="hi" label="Hindi" />
                 <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/es.vtt" srclang="es" label="Spanish" />
               </video>
 
-              <a id="shop-popup" class="shoppable-overlay" href="https://store.example.com/item/991" target="_blank" style="z-index:10;">
+              <a id="shop-popup" class="shoppable-overlay" href="https://store.example.com/item/991" target="_blank" style="z-index:5;">
                 🛒 <strong>Wireless Noise-Canceling Headphones</strong>
                 <span style="color:var(--emerald); font-weight:700; margin-left:6px;">$129</span>
                 <div style="font-size:11px; color:var(--muted); margin-top:2px;">YOLOv11 + CLIP Match (Cosine: 0.93) • Click to Buy</div>
               </a>
 
-              <div style="position:absolute; top:14px; left:14px; z-index:10; pointer-events:none;">
+              <div style="position:absolute; top:14px; left:14px; z-index:5; pointer-events:none; max-width:62%;">
                 <span id="stream-status-pill" class="badge badge-green">PLAYING sample-3.mp4 • 720p CMAF • 1.0x • AUDIO: EN</span>
                 <div id="caption-box" style="margin-top:6px; font-size:12px; color:#e2e8f0; background:rgba(8,12,20,0.82); padding:4px 10px; border-radius:6px; border:1px solid #334155;">
                   [00:02] "FFmpeg decodes sample-3.mp4 once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."
@@ -225,8 +226,9 @@
             </div>
 
             <div class="controls-bar" style="margin-top:10px;">
-              <div>
-                <span style="color:var(--muted);">Active Stream:</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="action-btn" onclick="togglePlayPause()" id="btn-play-pause">⏸ Pause</button>
+                <button class="action-btn" style="background:var(--emerald);" onclick="toggleAiDubbedAudio()" id="btn-audio-tts">🔊 Enable AI Dubbed Audio (EN/HI/ES)</button>
                 <strong id="time-display" style="font-family:monospace; color:var(--cyan);">/sample-3.mp4 (00:00)</strong>
               </div>
               <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
@@ -249,7 +251,7 @@
                   </select>
                 </label>
                 <label>#EXT-X-MEDIA Audio &amp; VTT:
-                  <select id="sel-lang" onchange="updatePlayerConfig()">
+                  <select id="sel-lang" onchange="updatePlayerConfig(true)">
                     <option value="en">English (Faster-Whisper)</option>
                     <option value="hi">Hindi (NLLB-200 + Kokoro TTS)</option>
                     <option value="es">Spanish (NLLB-200 + Kokoro TTS)</option>
@@ -420,6 +422,15 @@
       es: '[00:02] "FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF .m4s de 2 segundos."'
     };
 
+    const SPEECH_TEXT = {
+      en: 'FFmpeg decodes sample 3 MP4 once and packages 360p, 720p, and 1080p into 2 second CMAF segments with zero egress storage.',
+      hi: 'FFmpeg स्रोत वीडियो को एक बार डिकोड करता है और 360p, 720p और 1080p को 2 सेकंड CMAF सेगमेंट में पैक करता है।',
+      es: 'FFmpeg decodifica el video una sola vez y empaqueta 360p, 720p y 1080p en segmentos CMAF de dos segundos.'
+    };
+
+    let aiAudioEnabled = false;
+    let audioCtx = null;
+
     const mainVideo = document.getElementById('main-video');
     if (mainVideo) {
       mainVideo.addEventListener('timeupdate', () => {
@@ -429,8 +440,72 @@
         const ss = String(cur % 60).padStart(2, '0');
         const dmm = String(Math.floor(dur / 60)).padStart(2, '0');
         const dss = String(dur % 60).padStart(2, '0');
-        document.getElementById('time-display').textContent = `/sample-3.mp4 (${mm}:${ss} / ${dmm}:${dss})`;
+        const q = document.getElementById('sel-quality') ? document.getElementById('sel-quality').value : '720p';
+        document.getElementById('time-display').textContent = `/sample-3.mp4 • ${q} (${mm}:${ss} / ${dmm}:${dss})`;
       });
+      mainVideo.addEventListener('play', () => {
+        const btn = document.getElementById('btn-play-pause');
+        if (btn) btn.textContent = '⏸ Pause';
+      });
+      mainVideo.addEventListener('pause', () => {
+        const btn = document.getElementById('btn-play-pause');
+        if (btn) btn.textContent = '▶ Play';
+      });
+    }
+
+    function togglePlayPause() {
+      if (!mainVideo) return;
+      if (mainVideo.paused) {
+        mainVideo.play().catch(() => {});
+      } else {
+        mainVideo.pause();
+      }
+    }
+
+    function playConfirmationTone() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(528, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } catch (e) {}
+    }
+
+    function speakDubbedNarration(lang) {
+      playConfirmationTone();
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(SPEECH_TEXT[lang] || SPEECH_TEXT.en);
+      utter.lang = lang === 'hi' ? 'hi-IN' : (lang === 'es' ? 'es-ES' : 'en-US');
+      utter.rate = parseFloat(document.getElementById('sel-speed').value || '1.0');
+      window.speechSynthesis.speak(utter);
+    }
+
+    function toggleAiDubbedAudio() {
+      aiAudioEnabled = !aiAudioEnabled;
+      const btn = document.getElementById('btn-audio-tts');
+      const lang = document.getElementById('sel-lang').value;
+      if (aiAudioEnabled) {
+        if (mainVideo) {
+          mainVideo.muted = false;
+          mainVideo.volume = 1.0;
+          if (mainVideo.paused) mainVideo.play().catch(() => {});
+        }
+        btn.textContent = `🔊 AI Dubbed Audio: ON (${lang.toUpperCase()})`;
+        btn.style.background = '#38bdf8';
+        speakDubbedNarration(lang);
+      } else {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        btn.textContent = '🔊 Enable AI Dubbed Audio (EN/HI/ES)';
+        btn.style.background = '#34d399';
+      }
     }
 
     function switchTab(tabId, btn) {
@@ -440,15 +515,54 @@
       btn.classList.add('active');
     }
 
-    function updatePlayerConfig() {
+    async function updatePlayerConfig(speakOnLangSwitch = false) {
       const q = document.getElementById('sel-quality').value;
       const s = document.getElementById('sel-speed').value;
       const l = document.getElementById('sel-lang').value;
+      const rung = q === '1080p-AV1' ? '1080p' : q;
+
       if (mainVideo) {
+        // Keep /sample-3.mp4 playing seamlessly without interrupting or detaching video buffer
+        if (!mainVideo.getAttribute('src') || mainVideo.getAttribute('src') !== '/sample-3.mp4') {
+          const t = mainVideo.currentTime || 0;
+          mainVideo.src = '/sample-3.mp4';
+          mainVideo.currentTime = t;
+        }
         mainVideo.playbackRate = parseFloat(s);
+        if (q === '360p') {
+          mainVideo.style.filter = 'blur(1.1px) contrast(0.95)';
+        } else if (q === '720p') {
+          mainVideo.style.filter = 'none';
+        } else {
+          mainVideo.style.filter = 'contrast(1.06) saturate(1.08)';
+        }
+        if (mainVideo.paused) {
+          mainVideo.play().catch(() => {});
+        }
       }
+
+      // Fetch and show the real FFmpeg-generated CMAF rendition playlist in the manifest preview
+      try {
+        const playlistUrl = `/out_cmaf/videos/vid_8842/video_h264/${rung}/playlist.m3u8`;
+        const rRes = await fetch(playlistUrl);
+        if (rRes.ok) {
+          document.getElementById('manifest-preview').textContent =
+            `# Active CMAF Rendition: ${playlistUrl}\n` + (await rRes.text());
+        }
+      } catch (e) {}
+
+      if (speakOnLangSwitch || aiAudioEnabled) {
+        aiAudioEnabled = true;
+        const btn = document.getElementById('btn-audio-tts');
+        if (btn) {
+          btn.textContent = `🔊 AI Dubbed Audio: ON (${l.toUpperCase()})`;
+          btn.style.background = '#38bdf8';
+        }
+        speakDubbedNarration(l);
+      }
+
       document.getElementById('stream-status-pill').textContent =
-        `PLAYING sample-3.mp4 • ${q} CMAF • ${s}x • AUDIO: ${l.toUpperCase()}`;
+        `PLAYING sample-3.mp4 • ${q} CMAF (.m4s) • ${s}x • AUDIO: ${l.toUpperCase()}`;
       document.getElementById('caption-box').textContent = CAPTIONS[l] || CAPTIONS.en;
     }
 

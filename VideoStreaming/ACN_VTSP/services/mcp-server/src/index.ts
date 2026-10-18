@@ -200,6 +200,16 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ service: "acn-vtsp-mcp-server", status: "healthy", tools_count: ACN_MCP_TOOLS.length }));
 });
 
+server.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`✅ ACN-VTSP Headless MCP Server is ALREADY running in the background on http://localhost:${PORT}`);
+    console.log(`   • List Exposed MCP Tools : http://localhost:${PORT}/mcp/tools`);
+    console.log(`   • (To restart it cleanly, run: Stop-Process -Name node -Force)`);
+    process.exit(0);
+  }
+  throw err;
+});
+
 server.listen(PORT, () => {
   console.log(`🤖 ACN-VTSP Headless MCP Server (SSE / JSON-RPC) listening on http://localhost:${PORT}`);
   console.log(`   • List Exposed MCP Tools : http://localhost:${PORT}/mcp/tools`);

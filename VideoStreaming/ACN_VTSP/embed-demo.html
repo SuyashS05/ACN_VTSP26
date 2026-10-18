@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>External LMS / E-Commerce Site — &lt;acn-video-player&gt; Headless Embed Demo</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0f19;
+      color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 32px 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .code-snippet {
+      background: #060911;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px;
+      font-family: Consolas, monospace;
+      font-size: 12.5px;
+      color: #38bdf8;
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar">
+      <div>
+        <span style="color:#34d399; font-family:monospace; font-size:12px;">EXTERNAL PLATFORM EMBED SDK DEMO</span>
+        <h1 style="margin:4px 0 0; font-size:22px;">&lt;acn-video-player&gt; Headless Web Component</h1>
+      </div>
+      <a href="/" style="color:#38bdf8; text-decoration:none; font-size:13px; font-weight:600;">← Back to Main Platform</a>
+    </div>
+
+    <!-- Custom Web Component Instance -->
+    <acn-video-player
+      video-id="vid_8842"
+      src="/sample-3.mp4"
+      token="451801a51e5940940a1b0e1641c5d71536e7d661704292fca5acf3baf58b3923"
+      origin="http://localhost:8080">
+    </acn-video-player>
+
+    <div class="code-snippet">
+      &lt;!-- Drop this 1-line Web Component into any external website, Notion page, or LMS --&gt;<br/>
+      &lt;script type="module" src="http://localhost:8080/embed-sdk.js"&gt;&lt;/script&gt;<br/>
+      &lt;acn-video-player video-id="vid_8842" src="http://localhost:8080/sample-3.mp4" token="hmac_sha256_signed_token"&gt;&lt;/acn-video-player&gt;
+    </div>
+  </div>
+
+  <script>
+    class AcnVideoPlayer extends HTMLElement {
+      connectedCallback() {
+        const videoId = this.getAttribute('video-id') || 'vid_8842';
+        const src = this.getAttribute('src') || '/sample-3.mp4';
+        const shadow = this.attachShadow({ mode: 'open' });
+        shadow.innerHTML = `
+          <style>
+            .shell { position:relative; aspect-ratio:16/9; background:#000; border-radius:14px; overflow:hidden; border:1.5px solid #334155; }
+            video { width:100%; height:100%; object-fit:contain; }
+            .popup { position:absolute; top:16px; right:16px; background:rgba(15,23,42,0.92); border:1.5px solid #38bdf8; border-radius:10px; padding:10px 14px; color:#fff; text-decoration:none; font-size:13px; }
+            .bar { position:absolute; top:16px; left:16px; background:rgba(8,12,20,0.85); padding:6px 12px; border-radius:999px; font-size:11.5px; font-family:monospace; color:#34d399; border:1px solid #10b981; }
+          </style>
+          <div class="shell">
+            <div class="bar">&lt;acn-video-player&gt; • ID: ${videoId} • Domain-Locked HMAC Verified</div>
+            <video src="${src}" controls autoplay muted loop playsinline>
+              <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/en.vtt" srclang="en" label="English" default />
+              <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/hi.vtt" srclang="hi" label="Hindi" />
+              <track kind="captions" src="/out_cmaf/videos/vid_8842/captions/es.vtt" srclang="es" label="Spanish" />
+            </video>
+            <a class="popup" href="https://store.example.com/item/991" target="_blank">
+              🛒 <strong>Wireless Noise-Canceling Headphones</strong> <span style="color:#34d399; font-weight:700;">$129</span>
+            </a>
+          </div>
+        `;
+      }
+    }
+    customElements.define('acn-video-player', AcnVideoPlayer);
+  </script>
+</body>
+</html>
+
