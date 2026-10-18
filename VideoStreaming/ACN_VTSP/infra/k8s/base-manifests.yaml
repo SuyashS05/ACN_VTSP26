@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acn-media-workers
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acn-core-services
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transcoder-cmaf-worker
+  namespace: acn-media-workers
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: transcoder-cmaf-worker
+  template:
+    metadata:
+      labels:
+        app: transcoder-cmaf-worker
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+      containers:
+        - name: transcoder-cmaf
+          image: ghcr.io/acn-vtsp/transcoder-cmaf:latest
+          env:
+            - name: KAFKA_BROKERS
+              value: "kafka-cluster.acn-infra.svc:9092"
+            - name: R2_PROCESSED_BUCKET
+              value: "acn-vtsp-processed-media"
+

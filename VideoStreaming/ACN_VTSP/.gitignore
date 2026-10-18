@@ -1,0 +1,21 @@
+# Python bytecode & virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Node / TypeScript
+node_modules/
+dist/
+.next/
+.turbo/
+
+# Local environment secrets
+.env
+.env.local
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+

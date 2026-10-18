@@ -757,19 +757,25 @@ spec:
         lagThreshold: "2"
 ```
 
-#### Quick-Start Commands (Local Development & Interactive Architecture Preview)
+#### Quick-Start Commands (Verified Local Development & Live Stack Execution)
 
 ```powershell
-# 1. Open the Interactive 6-Stage Architecture Flow Visualizer in your browser
-Start-Process "S:\Project_26\ACN_VTSP26\VideoStreaming\ACN_VTSP\flow2.html"
-
-# 2. Launch Local Polyglot Infrastructure (PostgreSQL, Qdrant, Redis, ClickHouse, Kafka, MinIO R2, LiveKit)
+# 1. Launch Local Polyglot Infrastructure (PostgreSQL, Qdrant, Redis, ClickHouse, Kafka, SeaweedFS R2, LiveKit, MediaMTX)
 docker compose up -d
 
-# 3. Start Core Backend API (Go Fiber), Chat Moderation Gateway (Go + ONNX), and MCP Server (SSE)
-make dev-services
+# 2. Initialize PostgreSQL 10-table schema, Qdrant collections, ClickHouse views, Kafka topics & R2 buckets
+python scripts/init_phase2_live_stack.py
 
-# 4. Start Next.js 15 Web App & Creator Studio
-pnpm --filter web-nextjs dev
+# 3. Run Single-Decode FFmpeg CMAF (.m4s) Transcoding + WebP Sprite Sheets on sample-3.mp4 & upload to R2 (:9001)
+python scripts/transcode_sample3_to_cmaf.py
+
+# 4. Start Headless MCP Server (:8084), Yjs CRDT Whiteboard (:8082), and Unified Web Platform + HTTP 206 Server (:8080)
+Start-Process node -ArgumentList "--experimental-strip-types services/mcp-server/src/index.ts"
+Start-Process node -ArgumentList "--experimental-strip-types services/whiteboard-yjs-sync/src/server.ts"
+python scripts/run_local_platform.py
+
+# 5. Execute the 8-Stage End-to-End Live Pipeline Verification Suite
+python scripts/run_e2e_live_pipeline.py
 ```
+
 

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: acn-vtsp-platform
+description: Helm Umbrella Chart for ACN-VTSP (LiveKit SFU, MediaMTX LL-HLS, Qdrant, ClickHouse, KEDA Spot Workers)
+type: application
+version: 1.0.0
+appVersion: "2026.10"
+dependencies:
+  - name: livekit-server
+    version: "1.7.0"
+    repository: "https://helm.livekit.io"
+  - name: qdrant
+    version: "1.11.0"
+    repository: "https://qdrant.github.io/qdrant-helm"
+
