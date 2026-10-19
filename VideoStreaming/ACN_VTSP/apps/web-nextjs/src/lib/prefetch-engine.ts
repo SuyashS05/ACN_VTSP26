@@ -28,11 +28,10 @@ export async function prefetchNextTwoVideosInViewport(
 
       // Warm browser/HTTP3 QUIC cache for manifest + CMAF init box + first 2s .m4s chunk
       await Promise.all([
-        fetch(item.masterM3u8Url, { mode: "cors", credentials: "include" }),
-        fetch(item.initMp4Url, { mode: "cors", credentials: "include" }),
+        fetch(item.masterM3u8Url, { mode: "cors" }),
+        fetch(item.initMp4Url, { mode: "cors" }),
         fetch(item.firstSegmentM4sUrl, {
           mode: "cors",
-          credentials: "include",
           headers: { Range: "bytes=0-409600" }, // ~400KB fast-startup cap
         }),
       ]);
@@ -40,3 +39,21 @@ export async function prefetchNextTwoVideosInViewport(
   );
 }
 
+export class ShortsPrefetchEngine {
+  private baseUrl: string;
+
+  constructor(baseUrl = "http://localhost:8080/out_cmaf") {
+    this.baseUrl = baseUrl;
+  }
+
+  public async onViewportChange(currentIndex: number, videoIds: string[]): Promise<string[]> {
+    const targets: FeedVideoPrefetchTarget[] = videoIds.map((vid) => ({
+      videoId: vid,
+      masterM3u8Url: `${this.baseUrl}/videos/vid_8842/master.m3u8`,
+      initMp4Url: `${this.baseUrl}/videos/vid_8842/video_h264/360p/init.mp4`,
+      firstSegmentM4sUrl: `${this.baseUrl}/videos/vid_8842/video_h264/360p/seg_000.m4s`,
+    }));
+    await prefetchNextTwoVideosInViewport(targets, currentIndex);
+    return videoIds.slice(currentIndex + 1, currentIndex + 3);
+  }
+}

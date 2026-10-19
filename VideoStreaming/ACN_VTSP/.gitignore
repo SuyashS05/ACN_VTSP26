@@ -5,11 +5,13 @@ __pycache__/
 .venv/
 venv/
 
-# Node / TypeScript
+# Node / TypeScript / Next.js generated files
 node_modules/
 dist/
 .next/
 .turbo/
+next-env.d.ts
+package-lock.json
 
 # Local environment secrets
 .env
@@ -18,4 +20,3 @@ dist/
 # OS & Editor files
 .DS_Store
 Thumbs.db
-
