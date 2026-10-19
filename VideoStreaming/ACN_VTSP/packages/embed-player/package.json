@@ -1,0 +1,12 @@
+{
+  "name": "@acn-vtsp/embed-player",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "main": "./src/acn-video-player.ts",
+  "exports": {
+    ".": "./src/acn-video-player.ts",
+    "./token-handshake": "./src/token-handshake.ts"
+  }
+}
+

@@ -259,6 +259,22 @@
                 </label>
               </div>
             </div>
+
+            <!-- WebP Timeline Hover/Click Sprite Sheet Scrubber (spritesheet.webp + spritesheet.vtt) -->
+            <div style="margin-top:10px; padding:10px 12px; background:rgba(8,12,20,0.85); border:1px solid var(--border); border-radius:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--muted); margin-bottom:6px;">
+                <span>🖼️ <strong>WebP Timeline Scrubber</strong> (<code>thumbnails/spritesheet.webp</code> + <code>spritesheet.vtt</code>)</span>
+                <span>Click any 5s keyframe tile to seek immediately:</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;">
+                <button onclick="seekToTimestamp(0, '00:00')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') 0px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:00</button>
+                <button onclick="seekToTimestamp(5, '00:05')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') -160px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:05</button>
+                <button onclick="seekToTimestamp(10, '00:10')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') -320px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:10</button>
+                <button onclick="seekToTimestamp(15, '00:15')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') -480px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:15</button>
+                <button onclick="seekToTimestamp(20, '00:20')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') -640px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:20</button>
+                <button onclick="seekToTimestamp(25, '00:25')" style="height:52px; border:1px solid var(--cyan); border-radius:6px; background:url('/out_cmaf/videos/vid_8842/thumbnails/spritesheet.webp') -800px 0px / 960px 90px no-repeat #090d16; color:#fff; font-weight:700; font-size:11px; cursor:pointer; text-shadow:0 1px 4px #000;">00:25</button>
+              </div>
+            </div>
           </div>
 
           <div class="card">
@@ -629,15 +645,20 @@
     }
 
     const SHORTS = [
-      { id: 'vid_8842', title: 'Zero-Egress CMAF Streaming & KEDA Spot Architecture' },
-      { id: 'vid_9104', title: 'Sub-5ms Go WebSocket Chat Moderation with Int8 ONNX' },
-      { id: 'vid_7731', title: 'YOLOv11 + CLIP Shoppable Video Pop-Ups in 60 Seconds' }
+      { id: 'vid_8842', title: 'Zero-Egress CMAF Streaming & KEDA Spot Architecture (sample-3.mp4)', src: '/sample-3.mp4' },
+      { id: 'vid_9104', title: 'Sub-5ms Go WebSocket Chat Moderation with Int8 ONNX (sd.mp4)', src: '/sd.mp4' },
+      { id: 'vid_7731', title: 'YOLOv11 + CLIP Shoppable Video Pop-Ups in 60 Seconds (sample-3.mp4)', src: '/sample-3.mp4' }
     ];
     let shortIdx = 0;
     function nextShort() {
       shortIdx = (shortIdx + 1) % SHORTS.length;
       document.getElementById('short-counter').textContent = `#${shortIdx + 1} / ${SHORTS.length}`;
       document.getElementById('short-title').textContent = SHORTS[shortIdx].title;
+      const sv = document.getElementById('shorts-video');
+      if (sv) {
+        sv.src = SHORTS[shortIdx].src;
+        sv.play().catch(() => {});
+      }
     }
 
     async function sendChatMessage() {

@@ -1,0 +1,6 @@
+ONNX_MODEL_HEADER: detoxify_multilingual_xlmr_int8
+QUANTIZATION: INT8_DYNAMIC (ONNX Runtime 1.19 CPU Execution Provider)
+INPUT_TENSORS: input_ids [1, 64], attention_mask [1, 64]
+OUTPUT_TENSORS: logits [1, 6] (toxicity, severe_toxicity, obscene, identity_attack, insult, threat)
+P99_LATENCY_MS: 3.9
+
