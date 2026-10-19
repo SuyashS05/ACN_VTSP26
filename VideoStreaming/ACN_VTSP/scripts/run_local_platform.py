@@ -224,6 +224,35 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
         body = json.loads(self.rfile.read(length).decode("utf-8") or "{}") if length > 0 else {}
         path = urlparse(self.path).path
 
+        if path == "/api/v1/auth/login":
+            email = str(body.get("email", "")).strip().lower()
+            password = str(body.get("password", ""))
+            has_channel = bool(body.get("has_channel", False))
+            if not email or "@" not in email:
+                self._send_json(400, {"error": "Invalid email address"})
+                return
+            if len(password) < 4:
+                self._send_json(400, {"error": "Password must be at least 4 characters"})
+                return
+            admin_email = "suyashskotkar@gmail.com"
+            if email == admin_email:
+                role = "ADMIN"
+            elif has_channel or email in {"creator@acn-vtsp.io", "client@acn-vtsp.io"}:
+                role = "CLIENT"
+            else:
+                role = "USER"
+            self._send_json(
+                200,
+                {
+                    "authenticated": True,
+                    "email": email,
+                    "role": role,
+                    "is_exclusive_admin": email == admin_email,
+                    "admin_email_policy": admin_email,
+                },
+            )
+            return
+
         if path == "/api/v1/uploads/init":
             vid = f"vid_{int(time.time()) % 100000}"
             sample_file = ROOT / "sample-3.mp4"

@@ -192,22 +192,23 @@
       <button class="tab-btn active" onclick="switchTab('watch', this)">1. 16:9 Watch, RAG &amp; Shoppable</button>
       <button class="tab-btn" onclick="switchTab('shorts', this)">2. 9:16 Shorts + Pre-Fetch</button>
       <button class="tab-btn" onclick="switchTab('live', this)">3. Live WebRTC, Yjs Board &amp; ONNX Chat</button>
-      <button class="tab-btn" id="tab-btn-studio" onclick="switchTab('studio', this)">4. Creator Studio (CLIENT)</button>
+      <button class="tab-btn" id="tab-btn-studio" style="display:none;" onclick="switchTab('studio', this)">4. Creator Studio (CLIENT)</button>
       <button class="tab-btn" onclick="switchTab('arch', this)">5. 6-Stage Flow</button>
-      <button class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin', this)" style="border-color:var(--amber); color:var(--amber);">6. 🛡️ Admin Control Plane</button>
+      <button class="tab-btn" id="tab-btn-admin" style="display:none; border-color:var(--amber); color:var(--amber);" onclick="switchTab('admin', this)">6. 🛡️ Admin Control Plane</button>
 
-      <button id="btn-become-client" class="action-btn" style="background:var(--emerald); border-radius:999px; font-size:12px;" onclick="becomeClientChannel()">
+      <button id="btn-become-client" class="action-btn" style="display:none; background:var(--emerald); border-radius:999px; font-size:12px;" onclick="becomeClientChannel()">
         🚀 Become a Client (Create Channel)
       </button>
 
-      <label style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-left:4px;">
-        <span>Role:</span>
-        <select id="sel-role" onchange="switchPlatformRole(this.value)" style="border-color:var(--cyan); font-weight:700;">
-          <option value="USER" selected>👤 USER (Default Viewer)</option>
-          <option value="CLIENT">🎬 CLIENT (Channel Creator)</option>
-          <option value="ADMIN">🛡️ ADMIN (Platform Manager)</option>
-        </select>
-      </label>
+      <span id="header-session-badge" class="badge badge-cyan" style="margin-left:4px;">Guest Viewer</span>
+
+      <button id="btn-auth-login" class="action-btn" style="background:var(--cyan); color:#080c14; border-radius:999px; font-size:12px;" onclick="promptEmailPasswordLogin()">
+        Sign In / Sign Up
+      </button>
+
+      <button id="btn-auth-logout" class="action-btn" style="display:none; background:var(--panel-alt); color:var(--text); border:1px solid var(--border); border-radius:999px; font-size:12px;" onclick="logoutPlatformSession()">
+        Logout
+      </button>
     </div>
   </header>
 
@@ -475,11 +476,13 @@
   </main>
 
   <script>
+    const EXCLUSIVE_ADMIN_EMAIL = 'suyashskotkar@gmail.com';
     let currentPlatformRole = 'USER';
+    let currentUserEmail = '';
+    let isUserLoggedIn = false;
+
     const ADMIN_CLIENTS = [
-      { id: 'chn_acn_official', email: 'creator@acn-vtsp.io', handle: '@acn_cloud_media', role: 'CLIENT', status: 'ACTIVE', scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'] },
-      { id: 'chn_edtech_labs', email: 'founder@edtech-stream.io', handle: '@edtech_ai_academy', role: 'CLIENT', status: 'ACTIVE', scopes: ['video:read', 'video:upload', 'ai:gpu_enrichment'] },
-      { id: 'chn_viewer_guest', email: 'viewer@gmail.com', handle: '(No Channel Yet)', role: 'USER', status: 'ACTIVE', scopes: ['video:read'] }
+      { id: 'chn_admin_root', email: EXCLUSIVE_ADMIN_EMAIL, handle: '@suyash_admin', role: 'ADMIN', status: 'ACTIVE', scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'] }
     ];
     const AVAILABLE_SCOPES = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'];
 
@@ -490,7 +493,7 @@
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; background:#090d16; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; font-size:12.5px;">
           <div>
             <strong>${c.email}</strong> <span style="color:var(--cyan); font-family:monospace; margin-left:6px;">${c.handle}</span>
-            <span class="badge ${c.role === 'CLIENT' ? 'badge-green' : 'badge-cyan'}" style="margin-left:6px;">${c.role}</span>
+            <span class="badge ${c.role === 'CLIENT' || c.role === 'ADMIN' ? 'badge-green' : 'badge-cyan'}" style="margin-left:6px;">${c.role}</span>
             <span class="badge ${c.status === 'ACTIVE' ? 'badge-green' : 'badge-rose'}" style="margin-left:4px;">${c.status}</span>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
@@ -498,9 +501,10 @@
               const has = c.scopes.includes(sc);
               return `<button onclick="toggleClientScope(${idx}, '${sc}')" class="badge ${has ? 'badge-green' : ''}" style="cursor:pointer; background:${has ? 'rgba(52,211,153,0.18)' : '#1e293b'}; color:${has ? '#34d399' : '#64748b'}; border:1px solid #334155;">${has ? '✓ ' : '+ '}${sc}</button>`;
             }).join('')}
+            ${c.email === EXCLUSIVE_ADMIN_EMAIL ? '<span class="badge badge-purple" style="margin-left:6px;">Super-Admin</span>' : `
             <button class="action-btn" style="font-size:11px; padding:4px 8px; margin-left:6px;" onclick="toggleClientRole(${idx})">
               ${c.role === 'USER' ? 'Promote -> CLIENT' : 'Set -> USER'}
-            </button>
+            </button>`}
           </div>
         </div>
       `).join('');
@@ -519,43 +523,117 @@
 
     function toggleClientRole(idx) {
       const c = ADMIN_CLIENTS[idx];
-      if (!c) return;
+      if (!c || c.email === EXCLUSIVE_ADMIN_EMAIL) return;
       c.role = c.role === 'USER' ? 'CLIENT' : 'USER';
       if (c.role === 'CLIENT' && c.handle === '(No Channel Yet)') {
-        c.handle = '@promoted_client_' + (idx + 1);
-        c.scopes = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment'];
+        c.handle = '@' + c.email.split('@')[0] + '_channel';
+        c.scopes = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'];
       }
       renderAdminClientsTable();
     }
 
-    function switchPlatformRole(role) {
-      currentPlatformRole = role;
-      const sel = document.getElementById('sel-role');
-      if (sel && sel.value !== role) sel.value = role;
+    function updateAuthHeaderUI() {
+      const sessionBadge = document.getElementById('header-session-badge');
       const btnBecome = document.getElementById('btn-become-client');
-      if (btnBecome) btnBecome.style.display = role === 'USER' ? 'inline-block' : 'none';
-      const badge = document.getElementById('admin-role-badge');
-      if (badge) badge.textContent = `Active Role: ${role}`;
-      renderAdminClientsTable();
-      if (role === 'CLIENT') {
-        switchTab('studio', document.getElementById('tab-btn-studio'));
-      } else if (role === 'ADMIN') {
-        switchTab('admin', document.getElementById('tab-btn-admin'));
+      const btnLogin = document.getElementById('btn-auth-login');
+      const btnLogout = document.getElementById('btn-auth-logout');
+      const tabStudio = document.getElementById('tab-btn-studio');
+      const tabAdmin = document.getElementById('tab-btn-admin');
+      const adminBadge = document.getElementById('admin-role-badge');
+
+      if (!isUserLoggedIn) {
+        if (sessionBadge) sessionBadge.textContent = 'Guest Viewer';
+        if (btnBecome) btnBecome.style.display = 'none';
+        if (btnLogin) btnLogin.style.display = 'inline-block';
+        if (btnLogout) btnLogout.style.display = 'none';
+        if (tabStudio) tabStudio.style.display = 'none';
+        if (tabAdmin) tabAdmin.style.display = 'none';
+        return;
       }
+
+      if (sessionBadge) sessionBadge.textContent = `${currentUserEmail} • ${currentPlatformRole}`;
+      if (btnBecome) btnBecome.style.display = currentPlatformRole === 'USER' ? 'inline-block' : 'none';
+      if (btnLogin) btnLogin.style.display = 'none';
+      if (btnLogout) btnLogout.style.display = 'inline-block';
+      if (tabStudio) tabStudio.style.display = (currentPlatformRole === 'CLIENT' || currentPlatformRole === 'ADMIN') ? 'inline-block' : 'none';
+      if (tabAdmin) tabAdmin.style.display = (currentPlatformRole === 'ADMIN' && currentUserEmail === EXCLUSIVE_ADMIN_EMAIL) ? 'inline-block' : 'none';
+      if (adminBadge) adminBadge.textContent = `Active Role: ${currentPlatformRole} (${currentUserEmail})`;
+      renderAdminClientsTable();
+    }
+
+    async function promptEmailPasswordLogin() {
+      const email = prompt('Sign In / Sign Up — Enter your Email Address:');
+      if (!email || !email.includes('@')) return;
+      const password = prompt('Enter Password (min 4 chars):');
+      if (!password || password.length < 4) {
+        alert('Password must be at least 4 characters.');
+        return;
+      }
+      const cleanEmail = email.trim().toLowerCase();
+      currentUserEmail = cleanEmail;
+      isUserLoggedIn = true;
+
+      let record = ADMIN_CLIENTS.find(c => c.email.toLowerCase() === cleanEmail);
+      if (cleanEmail === EXCLUSIVE_ADMIN_EMAIL) {
+        currentPlatformRole = 'ADMIN';
+      } else if (record && record.role === 'CLIENT') {
+        currentPlatformRole = 'CLIENT';
+      } else {
+        currentPlatformRole = 'USER';
+        if (!record) {
+          ADMIN_CLIENTS.push({
+            id: 'chn_' + Date.now().toString().slice(-4),
+            email: cleanEmail,
+            handle: '(No Channel Yet)',
+            role: 'USER',
+            status: 'ACTIVE',
+            scopes: ['video:read']
+          });
+        }
+      }
+      updateAuthHeaderUI();
+      if (currentPlatformRole === 'ADMIN') {
+        switchTab('admin', document.getElementById('tab-btn-admin'));
+      } else if (currentPlatformRole === 'CLIENT') {
+        switchTab('studio', document.getElementById('tab-btn-studio'));
+      }
+    }
+
+    function logoutPlatformSession() {
+      isUserLoggedIn = false;
+      currentUserEmail = '';
+      currentPlatformRole = 'USER';
+      updateAuthHeaderUI();
+      switchTab('watch', document.querySelector('.tab-btn'));
     }
 
     function becomeClientChannel() {
-      const handle = prompt('Enter your new Creator Channel handle to upgrade from USER -> CLIENT:', '@my_creator_channel');
+      if (!isUserLoggedIn || !currentUserEmail) {
+        promptEmailPasswordLogin();
+        return;
+      }
+      const defaultHandle = '@' + currentUserEmail.split('@')[0] + '_channel';
+      const handle = prompt('Create Your Creator Channel Handle to upgrade from USER -> CLIENT:', defaultHandle);
       if (!handle) return;
-      ADMIN_CLIENTS.unshift({
-        id: 'chn_' + Date.now().toString().slice(-4),
-        email: 'you@acn-vtsp.io',
-        handle: handle.startsWith('@') ? handle : '@' + handle,
-        role: 'CLIENT',
-        status: 'ACTIVE',
-        scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless']
-      });
-      switchPlatformRole('CLIENT');
+      const cleanHandle = handle.startsWith('@') ? handle : '@' + handle;
+      let existing = ADMIN_CLIENTS.find(c => c.email.toLowerCase() === currentUserEmail);
+      if (existing) {
+        existing.handle = cleanHandle;
+        existing.role = currentUserEmail === EXCLUSIVE_ADMIN_EMAIL ? 'ADMIN' : 'CLIENT';
+        existing.scopes = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'];
+      } else {
+        ADMIN_CLIENTS.push({
+          id: 'chn_' + Date.now().toString().slice(-4),
+          email: currentUserEmail,
+          handle: cleanHandle,
+          role: 'CLIENT',
+          status: 'ACTIVE',
+          scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless']
+        });
+      }
+      currentPlatformRole = currentUserEmail === EXCLUSIVE_ADMIN_EMAIL ? 'ADMIN' : 'CLIENT';
+      updateAuthHeaderUI();
+      switchTab('studio', document.getElementById('tab-btn-studio'));
     }
 
     setTimeout(renderAdminClientsTable, 50);

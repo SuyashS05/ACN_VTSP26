@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { usePlatformRole } from "../../../../lib/role-context";
+import Link from "next/link";
+import { ADMIN_EMAIL, usePlatformRole } from "../../../lib/role-context";
 
 const ALL_SCOPES = [
   "video:read",
@@ -23,25 +24,40 @@ const PLATFORM_SERVICES = [
 ];
 
 export default function AdminControlPlanePage() {
-  const { role, setRole, clients, toggleClientScope, updateClientStatus, promoteUserToRole } = usePlatformRole();
+  const { user, role, clients, toggleClientScope, updateClientStatus, promoteUserToRole } = usePlatformRole();
+
+  const isAuthorizedAdmin = user.isAuthenticated && role === "ADMIN" && user.email.toLowerCase() === ADMIN_EMAIL;
+
+  if (!isAuthorizedAdmin) {
+    return (
+      <div style={{ padding: 32, background: "#080c14", color: "#f8fafc", minHeight: "88vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ maxWidth: 460, background: "#0f172a", border: "1px solid #fb7185", borderRadius: 14, padding: 24, textAlign: "center" }}>
+          <h2 style={{ marginTop: 0, color: "#fb7185" }}>🔒 Admin Access Restricted</h2>
+          <p style={{ fontSize: 13.5, color: "#cbd5e1" }}>
+            Please sign in with the Platform Administrator account to access the Control Plane.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+            <Link
+              href="/login"
+              style={{ padding: "9px 18px", background: "#38bdf8", color: "#080c14", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 13 }}
+            >
+              Go to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 24, background: "#080c14", color: "#f8fafc", minHeight: "92vh" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>🛡️ Admin Control Plane • Clients, Access Permissions &amp; Platform Services</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>🛡️ Admin Control Plane • Verified Admin: {ADMIN_EMAIL}</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>
             Manage Users &amp; Client Channels, toggle granular API/GPU/Live access scopes, and monitor all 8 polyglot infrastructure services.
           </p>
         </div>
-        {role !== "ADMIN" && (
-          <button
-            onClick={() => setRole("ADMIN")}
-            style={{ padding: "8px 14px", background: "#fbbf24", color: "#080c14", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer" }}
-          >
-            Switch Active Role to ADMIN to Edit
-          </button>
-        )}
       </div>
 
       {/* Section 1: Client & User Access Permission Matrix */}
@@ -74,8 +90,13 @@ export default function AdminControlPlanePage() {
                         borderRadius: 999,
                         fontSize: 11,
                         fontWeight: 700,
-                        background: c.role === "CLIENT" ? "rgba(56,189,248,0.15)" : "rgba(148,163,184,0.15)",
-                        color: c.role === "CLIENT" ? "#38bdf8" : "#cbd5e1",
+                        background:
+                          c.role === "ADMIN"
+                            ? "rgba(251,191,36,0.18)"
+                            : c.role === "CLIENT"
+                            ? "rgba(56,189,248,0.15)"
+                            : "rgba(148,163,184,0.15)",
+                        color: c.role === "ADMIN" ? "#fbbf24" : c.role === "CLIENT" ? "#38bdf8" : "#cbd5e1",
                       }}
                     >
                       {c.role}
@@ -126,38 +147,42 @@ export default function AdminControlPlanePage() {
                     </div>
                   </td>
                   <td style={{ padding: 10 }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {c.role === "USER" ? (
+                    {c.email.toLowerCase() === ADMIN_EMAIL ? (
+                      <span style={{ fontSize: 11, color: "#fbbf24", fontWeight: 700 }}>Super-Admin (Locked)</span>
+                    ) : (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {c.role === "USER" ? (
+                          <button
+                            onClick={() => promoteUserToRole(c.clientId, "CLIENT")}
+                            style={{ padding: "5px 10px", background: "#38bdf8", color: "#080c14", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                          >
+                            Promote to CLIENT
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => promoteUserToRole(c.clientId, "USER")}
+                            style={{ padding: "5px 10px", background: "#1e293b", color: "#cbd5e1", border: "1px solid #334155", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
+                          >
+                            Demote to USER
+                          </button>
+                        )}
                         <button
-                          onClick={() => promoteUserToRole(c.clientId, "CLIENT")}
-                          style={{ padding: "5px 10px", background: "#38bdf8", color: "#080c14", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                          onClick={() => updateClientStatus(c.clientId, c.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE")}
+                          style={{
+                            padding: "5px 10px",
+                            background: c.status === "ACTIVE" ? "rgba(251,113,133,0.2)" : "rgba(52,211,153,0.2)",
+                            color: c.status === "ACTIVE" ? "#fb7185" : "#34d399",
+                            border: "1px solid #334155",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
                         >
-                          Promote to CLIENT
+                          {c.status === "ACTIVE" ? "Suspend" : "Activate"}
                         </button>
-                      ) : (
-                        <button
-                          onClick={() => promoteUserToRole(c.clientId, "USER")}
-                          style={{ padding: "5px 10px", background: "#1e293b", color: "#cbd5e1", border: "1px solid #334155", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
-                        >
-                          Demote to USER
-                        </button>
-                      )}
-                      <button
-                        onClick={() => updateClientStatus(c.clientId, c.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE")}
-                        style={{
-                          padding: "5px 10px",
-                          background: c.status === "ACTIVE" ? "rgba(251,113,133,0.2)" : "rgba(52,211,153,0.2)",
-                          color: c.status === "ACTIVE" ? "#fb7185" : "#34d399",
-                          border: "1px solid #334155",
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {c.status === "ACTIVE" ? "Suspend" : "Activate"}
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -184,4 +209,3 @@ export default function AdminControlPlanePage() {
     </div>
   );
 }
-

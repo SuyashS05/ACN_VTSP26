@@ -17,7 +17,22 @@ const (
 	RoleUser   PlatformRole = "USER"
 	RoleClient PlatformRole = "CLIENT"
 	RoleAdmin  PlatformRole = "ADMIN"
+
+	// AdminEmail is the EXCLUSIVE email address permitted to hold the ADMIN role.
+	AdminEmail = "suyashskotkar@gmail.com"
 )
+
+// ResolveRoleForEmail returns RoleAdmin ONLY when email matches AdminEmail ("suyashskotkar@gmail.com").
+func ResolveRoleForEmail(email string, hasCreatedChannel bool) PlatformRole {
+	normalized := strings.ToLower(strings.TrimSpace(email))
+	if normalized == AdminEmail {
+		return RoleAdmin
+	}
+	if hasCreatedChannel {
+		return RoleClient
+	}
+	return RoleUser
+}
 
 // ScopedKeyClaims represents validated Unkey / SHA-256 API Key and RBAC metadata.
 type ScopedKeyClaims struct {
