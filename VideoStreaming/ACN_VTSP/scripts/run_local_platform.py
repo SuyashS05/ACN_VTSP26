@@ -87,7 +87,7 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization, X-File-Name")
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()
         self.wfile.write(raw)
@@ -96,7 +96,7 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Authorization, X-File-Name")
         self.end_headers()
 
     def serve_byte_range_file(self, file_path: Path, content_type: str) -> None:
@@ -148,8 +148,8 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json(200, {"service": "acn-vtsp-unified-server", "status": "healthy"})
             return
 
-        # Serve sample-3.mp4 (and any .mp4 / .m4s / .vtt / .m3u8) with HTTP 206 Byte-Range support for Chrome
-        if path.endswith(".mp4") or path.endswith(".m4s") or path.endswith(".vtt") or path.endswith(".m3u8"):
+        # Serve sample-3.mp4, sd.mp4, uploaded media, .webp/.png/.jpg thumbnails, and .m4s / .vtt / .m3u8 with HTTP 206 & CORS
+        if path.lower().endswith((".mp4", ".webm", ".mov", ".m4s", ".vtt", ".m3u8", ".webp", ".png", ".jpg", ".jpeg", ".gif")):
             rel = path.lstrip("/")
             target = (ROOT / rel).resolve()
             if not target.exists() and target.name.startswith("init") and (target.parent.parent / target.name).exists():
@@ -157,13 +157,26 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
             if not target.exists() and path.endswith(".mp4"):
                 target = ROOT / "sample-3.mp4"
             if target.exists() and target.is_file():
+                low = path.lower()
                 mime = "video/mp4"
-                if path.endswith(".m4s"):
+                if low.endswith(".webm"):
+                    mime = "video/webm"
+                elif low.endswith(".mov"):
+                    mime = "video/quicktime"
+                elif low.endswith(".m4s"):
                     mime = "video/iso.segment"
-                elif path.endswith(".vtt"):
+                elif low.endswith(".vtt"):
                     mime = "text/vtt; charset=utf-8"
-                elif path.endswith(".m3u8"):
+                elif low.endswith(".m3u8"):
                     mime = "application/vnd.apple.mpegurl"
+                elif low.endswith(".webp"):
+                    mime = "image/webp"
+                elif low.endswith(".png"):
+                    mime = "image/png"
+                elif low.endswith((".jpg", ".jpeg")):
+                    mime = "image/jpeg"
+                elif low.endswith(".gif"):
+                    mime = "image/gif"
                 self.serve_byte_range_file(target, mime)
                 return
 
@@ -220,9 +233,30 @@ class AcnPlatformHandler(http.server.SimpleHTTPRequestHandler):
             pass
 
     def do_POST(self) -> None:
-        length = int(self.headers.get("Content-Length", "0"))
-        body = json.loads(self.rfile.read(length).decode("utf-8") or "{}") if length > 0 else {}
         path = urlparse(self.path).path
+        length = int(self.headers.get("Content-Length", "0"))
+
+        if path == "/api/v1/studio/upload-binary":
+            raw_bytes = self.rfile.read(length) if length > 0 else b""
+            orig_name = self.headers.get("X-File-Name", f"upload_{int(time.time())}.mp4")
+            safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", orig_name)
+            uploads_dir = ROOT / "uploads"
+            uploads_dir.mkdir(parents=True, exist_ok=True)
+            final_name = f"{int(time.time())}_{safe_name}"
+            target_file = uploads_dir / final_name
+            target_file.write_bytes(raw_bytes)
+            self._send_json(
+                201,
+                {
+                    "ok": True,
+                    "file_name": final_name,
+                    "size_bytes": len(raw_bytes),
+                    "url": f"http://localhost:{PORT}/uploads/{final_name}",
+                },
+            )
+            return
+
+        body = json.loads(self.rfile.read(length).decode("utf-8") or "{}") if length > 0 else {}
 
         if path == "/api/v1/auth/login":
             email = str(body.get("email", "")).strip().lower()

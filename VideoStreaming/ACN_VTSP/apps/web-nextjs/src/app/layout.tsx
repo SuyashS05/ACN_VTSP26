@@ -12,8 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body style={{ margin: 0, background: "#080c14", color: "#f8fafc", fontFamily: "system-ui, sans-serif" }}>
         <RoleProvider>
-          <RoleNavigationHeader />
-          {children}
+          <RoleNavigationHeader>{children}</RoleNavigationHeader>
         </RoleProvider>
       </body>
     </html>
