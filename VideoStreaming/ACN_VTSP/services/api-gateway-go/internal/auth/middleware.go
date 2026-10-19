@@ -7,12 +7,26 @@ import (
 	"strings"
 )
 
-// ScopedKeyClaims represents validated Unkey / SHA-256 API Key metadata.
+// PlatformRole defines the 3-tier RBAC hierarchy:
+//   - USER   (Default): Viewer/Learner who can watch streams, Shorts, RAG Q&A, MCQs, and upgrade via "Become a Client"
+//   - CLIENT          : User who created a Channel; unlocks S3 Multipart Uploads, Shoppable Catalog, API Keys & MCP
+//   - ADMIN           : Platform Operator managing Clients, Users, Channel Scopes, KEDA Spot Workers & Services
+type PlatformRole string
+
+const (
+	RoleUser   PlatformRole = "USER"
+	RoleClient PlatformRole = "CLIENT"
+	RoleAdmin  PlatformRole = "ADMIN"
+)
+
+// ScopedKeyClaims represents validated Unkey / SHA-256 API Key and RBAC metadata.
 type ScopedKeyClaims struct {
-	ChannelID      string   `json:"channel_id"`
-	KeyPrefix      string   `json:"key_prefix"`
-	Scopes         []string `json:"scopes"`
-	AllowedOrigins []string `json:"allowed_origins_cors"`
+	UserID         string       `json:"user_id"`
+	Role           PlatformRole `json:"role"`
+	ChannelID      string       `json:"channel_id"`
+	KeyPrefix      string       `json:"key_prefix"`
+	Scopes         []string     `json:"scopes"`
+	AllowedOrigins []string     `json:"allowed_origins_cors"`
 }
 
 // ValidateScopedAPIKey hashes a Bearer `vid_live_...` key with SHA-256 and verifies required scopes & CORS origin.
@@ -25,9 +39,11 @@ func ValidateScopedAPIKey(rawHeader string, origin string, requiredScope string)
 	_ = hex.EncodeToString(sum[:])
 
 	claims := &ScopedKeyClaims{
+		UserID:         "usr_demo_01",
+		Role:           RoleClient,
 		ChannelID:      "chn_acn_official",
 		KeyPrefix:      token[:12],
-		Scopes:         []string{"video:read", "video:upload", "stream:live"},
+		Scopes:         []string{"video:read", "video:upload", "stream:live", "ai:gpu_enrichment", "mcp:headless"},
 		AllowedOrigins: []string{"http://localhost:8080", "http://localhost:3000", "*"},
 	}
 
@@ -41,7 +57,7 @@ func ValidateScopedAPIKey(rawHeader string, origin string, requiredScope string)
 	return claims, hasScope
 }
 
-// Middleware wraps an http.HandlerFunc with OAuth2 JWT / Unkey Scoped API Key verification.
+// Middleware wraps an http.HandlerFunc with OAuth2 JWT / Unkey Scoped API Key & Role verification.
 func Middleware(requiredScope string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -54,4 +70,3 @@ func Middleware(requiredScope string, next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-

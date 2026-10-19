@@ -188,12 +188,26 @@
         <div style="font-size:11.5px; color:var(--muted);">Zero-Egress R2 • KEDA Spot CMAF (.m4s) • Spot GPU AI • Sub-300ms WebRTC &amp; Yjs • &lt;5ms ONNX Chat • Headless MCP</div>
       </div>
     </div>
-    <div class="tabs">
+    <div class="tabs" style="align-items:center;">
       <button class="tab-btn active" onclick="switchTab('watch', this)">1. 16:9 Watch, RAG &amp; Shoppable</button>
       <button class="tab-btn" onclick="switchTab('shorts', this)">2. 9:16 Shorts + Pre-Fetch</button>
       <button class="tab-btn" onclick="switchTab('live', this)">3. Live WebRTC, Yjs Board &amp; ONNX Chat</button>
-      <button class="tab-btn" onclick="switchTab('studio', this)">4. Creator Studio, Upload &amp; MCP</button>
-      <button class="tab-btn" onclick="switchTab('arch', this)">5. Interactive 6-Stage Flow (flow2.html)</button>
+      <button class="tab-btn" id="tab-btn-studio" onclick="switchTab('studio', this)">4. Creator Studio (CLIENT)</button>
+      <button class="tab-btn" onclick="switchTab('arch', this)">5. 6-Stage Flow</button>
+      <button class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin', this)" style="border-color:var(--amber); color:var(--amber);">6. 🛡️ Admin Control Plane</button>
+
+      <button id="btn-become-client" class="action-btn" style="background:var(--emerald); border-radius:999px; font-size:12px;" onclick="becomeClientChannel()">
+        🚀 Become a Client (Create Channel)
+      </button>
+
+      <label style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-left:4px;">
+        <span>Role:</span>
+        <select id="sel-role" onchange="switchPlatformRole(this.value)" style="border-color:var(--cyan); font-weight:700;">
+          <option value="USER" selected>👤 USER (Default Viewer)</option>
+          <option value="CLIENT">🎬 CLIENT (Channel Creator)</option>
+          <option value="ADMIN">🛡️ ADMIN (Platform Manager)</option>
+        </select>
+      </label>
     </div>
   </header>
 
@@ -429,9 +443,122 @@
         <iframe src="/flow2.html" style="width:100%; height:640px; border:none;"></iframe>
       </div>
     </section>
+
+    <!-- ==================== TAB 6: ADMIN CONTROL PLANE (CLIENTS, ACCESS PERMISSIONS & SERVICES) ==================== -->
+    <section id="tab-admin" class="tab-view">
+      <div class="card" style="margin-bottom:18px;">
+        <h3 class="card-title">
+          <span>🛡️ Admin Control Plane • Manage Clients, Users &amp; Channel Access Permissions (RBAC)</span>
+          <span id="admin-role-badge" class="badge badge-purple">Active Role: USER (Switch to ADMIN in top-right dropdown to manage)</span>
+        </h3>
+        <p style="font-size:12.5px; color:var(--muted); margin:0 0 12px;">
+          Every viewer starts with the <code>USER</code> role. When a user clicks <strong>🚀 Become a Client (Create Channel)</strong> (or is promoted below), their role upgrades to <code>CLIENT</code> with granular access scopes managed by <code>ADMIN</code>:
+        </p>
+        <div id="admin-clients-table"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">
+          <span>Platform Services, Docker Containers &amp; KEDA Spot Autoscaler Governance</span>
+          <span class="badge badge-green">8 / 8 Containers Healthy</span>
+        </h3>
+        <pre style="margin:0;">• acn-postgres (:5432)      -> HEALTHY | 10 Tables (users, channels, videos, video_mcqs, api_keys, moderation_logs)
+• acn-redis (:6379)         -> HEALTHY | Sub-20ms ZSET Personalized Feed + Yjs CRDT Snapshots + Pub/Sub
+• acn-qdrant (:6333)        -> HEALTHY | 3 Collections (transcript_chunks, merchant_products, video_embeddings)
+• acn-clickhouse (:8123)    -> HEALTHY | Real-Time Watch Telemetry + mv_video_engagement_stats
+• acn-kafka (:9092)         -> HEALTHY | 4 Topics (video.ingest.object_created, video.transcode.*, video.ai.completed)
+• acn-r2-storage (:9001)    -> HEALTHY | Zero-Egress SeaweedFS R2 (54+ CMAF .m4s segments, .mpd, .webp sprites)
+• mcp-server (:8084)        -> HEALTHY | 4 Headless AI Agent Tools over Streamable HTTP/SSE
+• whiteboard-yjs (:8082)    -> HEALTHY | &lt;5 kbps Uint8Array Binary CRDT Vector Sync</pre>
+      </div>
+    </section>
   </main>
 
   <script>
+    let currentPlatformRole = 'USER';
+    const ADMIN_CLIENTS = [
+      { id: 'chn_acn_official', email: 'creator@acn-vtsp.io', handle: '@acn_cloud_media', role: 'CLIENT', status: 'ACTIVE', scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'] },
+      { id: 'chn_edtech_labs', email: 'founder@edtech-stream.io', handle: '@edtech_ai_academy', role: 'CLIENT', status: 'ACTIVE', scopes: ['video:read', 'video:upload', 'ai:gpu_enrichment'] },
+      { id: 'chn_viewer_guest', email: 'viewer@gmail.com', handle: '(No Channel Yet)', role: 'USER', status: 'ACTIVE', scopes: ['video:read'] }
+    ];
+    const AVAILABLE_SCOPES = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless'];
+
+    function renderAdminClientsTable() {
+      const el = document.getElementById('admin-clients-table');
+      if (!el) return;
+      el.innerHTML = ADMIN_CLIENTS.map((c, idx) => `
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; background:#090d16; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; font-size:12.5px;">
+          <div>
+            <strong>${c.email}</strong> <span style="color:var(--cyan); font-family:monospace; margin-left:6px;">${c.handle}</span>
+            <span class="badge ${c.role === 'CLIENT' ? 'badge-green' : 'badge-cyan'}" style="margin-left:6px;">${c.role}</span>
+            <span class="badge ${c.status === 'ACTIVE' ? 'badge-green' : 'badge-rose'}" style="margin-left:4px;">${c.status}</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+            ${AVAILABLE_SCOPES.map(sc => {
+              const has = c.scopes.includes(sc);
+              return `<button onclick="toggleClientScope(${idx}, '${sc}')" class="badge ${has ? 'badge-green' : ''}" style="cursor:pointer; background:${has ? 'rgba(52,211,153,0.18)' : '#1e293b'}; color:${has ? '#34d399' : '#64748b'}; border:1px solid #334155;">${has ? '✓ ' : '+ '}${sc}</button>`;
+            }).join('')}
+            <button class="action-btn" style="font-size:11px; padding:4px 8px; margin-left:6px;" onclick="toggleClientRole(${idx})">
+              ${c.role === 'USER' ? 'Promote -> CLIENT' : 'Set -> USER'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleClientScope(idx, scope) {
+      const c = ADMIN_CLIENTS[idx];
+      if (!c) return;
+      if (c.scopes.includes(scope)) {
+        c.scopes = c.scopes.filter(s => s !== scope);
+      } else {
+        c.scopes.push(scope);
+      }
+      renderAdminClientsTable();
+    }
+
+    function toggleClientRole(idx) {
+      const c = ADMIN_CLIENTS[idx];
+      if (!c) return;
+      c.role = c.role === 'USER' ? 'CLIENT' : 'USER';
+      if (c.role === 'CLIENT' && c.handle === '(No Channel Yet)') {
+        c.handle = '@promoted_client_' + (idx + 1);
+        c.scopes = ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment'];
+      }
+      renderAdminClientsTable();
+    }
+
+    function switchPlatformRole(role) {
+      currentPlatformRole = role;
+      const sel = document.getElementById('sel-role');
+      if (sel && sel.value !== role) sel.value = role;
+      const btnBecome = document.getElementById('btn-become-client');
+      if (btnBecome) btnBecome.style.display = role === 'USER' ? 'inline-block' : 'none';
+      const badge = document.getElementById('admin-role-badge');
+      if (badge) badge.textContent = `Active Role: ${role}`;
+      renderAdminClientsTable();
+      if (role === 'CLIENT') {
+        switchTab('studio', document.getElementById('tab-btn-studio'));
+      } else if (role === 'ADMIN') {
+        switchTab('admin', document.getElementById('tab-btn-admin'));
+      }
+    }
+
+    function becomeClientChannel() {
+      const handle = prompt('Enter your new Creator Channel handle to upgrade from USER -> CLIENT:', '@my_creator_channel');
+      if (!handle) return;
+      ADMIN_CLIENTS.unshift({
+        id: 'chn_' + Date.now().toString().slice(-4),
+        email: 'you@acn-vtsp.io',
+        handle: handle.startsWith('@') ? handle : '@' + handle,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        scopes: ['video:read', 'video:upload', 'stream:live', 'ai:gpu_enrichment', 'mcp:headless']
+      });
+      switchPlatformRole('CLIENT');
+    }
+
+    setTimeout(renderAdminClientsTable, 50);
     const CAPTIONS = {
       en: '[00:02] "FFmpeg decodes sample-3.mp4 once and packages 360p, 720p, and 1080p into 2-second CMAF .m4s segments."',
       hi: '[00:02] "FFmpeg स्रोत वीडियो को एक बार डिकोड करता है और 360p, 720p और 1080p को 2-सेकंड CMAF .m4s सेगमेंट में पैक करता है।"',
